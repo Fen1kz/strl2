@@ -4,5 +4,13 @@ import './index.css';
 import App from './App';
 import registerServiceWorker from './registerServiceWorker';
 
+import { setObservableConfig } from 'recompose'
+import {from} from 'rxjs';
+
+setObservableConfig({
+  fromESObservable: from
+  , toESObservableObservable: stream => stream
+});
+
 ReactDOM.render(<App />, document.getElementById('root'));
 registerServiceWorker();
