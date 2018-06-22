@@ -12,5 +12,7 @@ setObservableConfig({
   , toESObservableObservable: stream => stream
 });
 
+window.React = React;
+
 ReactDOM.render(<App />, document.getElementById('root'));
 registerServiceWorker();

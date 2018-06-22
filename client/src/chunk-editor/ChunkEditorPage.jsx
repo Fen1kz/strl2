@@ -1,5 +1,6 @@
 import React, {PureComponent} from 'react';
 import ChunkEditor from './ChunkEditor';
+import {ChunkServiceCtx} from './ChunkService';
 
 export default class ChunkEditorPage extends PureComponent {
   constructor() {
@@ -13,7 +14,8 @@ export default class ChunkEditorPage extends PureComponent {
       <button onClick={() => this.setState({on: false})}>off</button>
         <div>
           {this.state.on && <ChunkEditor/>}
+          <ChunkEditor visible={this.state.on}/>
         </div>
-    </div>)
+      </div>)
   }
 }

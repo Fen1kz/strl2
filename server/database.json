@@ -1,0 +1,92 @@
+{
+  "filename": "database.json",
+  "collections": [
+    {
+      "name": "chunks",
+      "data": [
+        {
+          "level": 1,
+          "name": "kek",
+          "meta": {
+            "revision": 0,
+            "created": 1529588587877,
+            "version": 0
+          },
+          "$loki": 1
+        }
+      ],
+      "idIndex": [
+        1
+      ],
+      "binaryIndices": {},
+      "constraints": null,
+      "uniqueNames": [],
+      "transforms": {},
+      "objType": "chunks",
+      "dirty": false,
+      "cachedIndex": null,
+      "cachedBinaryIndex": null,
+      "cachedData": null,
+      "adaptiveBinaryIndices": true,
+      "transactional": false,
+      "cloneObjects": false,
+      "cloneMethod": "parse-stringify",
+      "asyncListeners": false,
+      "disableMeta": false,
+      "disableChangesApi": true,
+      "disableDeltaChangesApi": true,
+      "autoupdate": false,
+      "serializableIndices": true,
+      "ttl": null,
+      "maxId": 1,
+      "DynamicViews": [],
+      "events": {
+        "insert": [],
+        "update": [],
+        "pre-insert": [],
+        "pre-update": [],
+        "close": [],
+        "flushbuffer": [],
+        "error": [],
+        "delete": [
+          null
+        ],
+        "warning": [
+          null
+        ]
+      },
+      "changes": []
+    }
+  ],
+  "databaseVersion": 1.5,
+  "engineVersion": 1.5,
+  "autosave": true,
+  "autosaveInterval": 1000,
+  "autosaveHandle": null,
+  "throttledSaves": true,
+  "options": {
+    "autosave": true,
+    "autosaveInterval": 1000,
+    "autoload": true,
+    "serializationMethod": "pretty",
+    "destructureDelimiter": "$<\n",
+    "recursiveWait": true,
+    "recursiveWaitLimit": false,
+    "recursiveWaitLimitDuration": 2000,
+    "started": 1529588569138
+  },
+  "persistenceMethod": "fs",
+  "persistenceAdapter": null,
+  "verbose": false,
+  "events": {
+    "init": [
+      null
+    ],
+    "loaded": [],
+    "flushChanges": [],
+    "close": [],
+    "changes": [],
+    "warning": []
+  },
+  "ENV": "NODEJS"
+}

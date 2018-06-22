@@ -1,15 +1,19 @@
-import {of, interval, pipe} from 'rxjs';
-import {tap} from 'rxjs/operators';
+import React from 'react';
+import * as rx from 'rxjs';
+import * as op from 'rxjs/operators';
 
-export default class ChunkService {
+export class ChunkService {
   constructor() {
-    // this.counter$ = of(0);
+    console.log('CONSTRUCTOR')
+    this.counter$ = rx.of(0);
     // this.updateValue$ = (obs)
     // this.onDec$
-    this.interval$ = interval(1000)
-      .pipe(
-        tap(x => console.log(x))
-      )
+    this.timer$ = rx.interval(5000)
+      // .pipe(
+      //   op.tap(x => console.log(x))
+      // )
   }
   // loadChunks: () => fetch('localhost:8080/api/chunks');
 }
+
+export const ChunkServiceCtx = React.createContext(new ChunkService())
