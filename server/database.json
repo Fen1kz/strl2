@@ -6,13 +6,25 @@
       "data": [
         {
           "level": 1,
-          "name": "kek",
+          "nodes": {},
+          "links": [],
           "meta": {
             "revision": 0,
             "created": 1529588587877,
             "version": 0
           },
           "$loki": 1
+        }
+        , {
+          "level": 1,
+          "nodes": {},
+          "links": [],
+          "meta": {
+            "revision": 0,
+            "created": 1529588587877,
+            "version": 0
+          },
+          "$loki": 2
         }
       ],
       "idIndex": [

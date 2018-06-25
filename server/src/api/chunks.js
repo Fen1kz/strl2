@@ -4,6 +4,11 @@ import chunksConfig from '../models/chunks';
 
 export default ({ config, db }) => {
   const chunks = chunksConfig(db);
+
+  const mapChunk = (chunk) => {
+  	chunk.id = chunk.$loki;
+  	return chunk;
+	};
   
   return resource({
   	/** Property name to store preloaded entity on `request`. */
@@ -13,11 +18,10 @@ export default ({ config, db }) => {
   	 *  Errors terminate the request, success sets `req[id] = data`.
   	 */
   	load(req, id, callback) {
+  		console.log('load');
   		const chunk = chunks.findOne({'$loki': +id});
       if (chunk) {
-  		    chunk.id = chunk.$loki;
-          delete chunk.$loki;
-  		    callback(null, chunk);
+  		    callback(null, mapChunk(chunk));
       } else {
   		    callback('Not found');
       }
@@ -25,7 +29,10 @@ export default ({ config, db }) => {
 
   	/** GET / - List all entities */
   	index({ params }, res) {
-  		res.json(chunks.find());
+  		res.json(chunks.find().map(mapChunk).reduce((result, data) => {
+  			result[data.id] = data;
+  			return result;
+			}, {}));
   	},
 
   	/** POST / - Create a new entity */
