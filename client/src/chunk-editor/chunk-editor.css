@@ -1,0 +1,9 @@
+.GridAdd {
+  fill: #aaa;
+  stroke-width: 1px;
+  stroke: #444;
+}
+.GridAdd:hover {
+  fill: #afa;
+  cursor: pointer;
+}

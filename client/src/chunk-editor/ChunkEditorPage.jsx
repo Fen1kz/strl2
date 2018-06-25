@@ -3,6 +3,8 @@ import ChunkList from './ChunkList';
 import ChunkEdit from './ChunkEdit';
 import {Switch, Route, Link, withRouter} from "react-router-dom";
 
+import './chunk-editor.css';
+
 export class ChunkEditorPage extends PureComponent {
   render() {
     return (<div>
