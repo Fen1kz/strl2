@@ -1,9 +1,29 @@
-.GridAdd {
+.ChunkEdit_Cell {
   fill: #aaa;
   stroke-width: 1px;
   stroke: #444;
-}
-.GridAdd:hover {
-  fill: #afa;
   cursor: pointer;
+}
+.ChunkEdit_Cell:hover {
+  fill: #afa;
+}
+
+.ChunkEdit_Node {
+  fill: #444;
+}
+
+.ChunkEdit_Node.Selected {
+  stroke-width: 1px;
+  stroke: #4f4;
+}
+
+.ChunkEdit_Node.Hover {
+  fill: #4f4;
+}
+
+.ChunkEdit_Selection {
+  fill: none;
+  stroke-width: 1px;
+  stroke-dasharray: 5px;
+  stroke: #4f4;
 }

@@ -8,22 +8,55 @@ import {compose} from "redux";
 import {selectChunk} from "./selectors";
 
 import LoadData from "../util/LoadData";
+import ChunkEditCells from './chunk-edit/ChunkEditCells';
+import ChunkEditNode from './chunk-edit/ChunkEditNode';
 
-const RADIUS = 1;
-const SCALE = 1;
-const SVG_WIDTH = 300;
-const SVG_HEIGHT = 300;
-const VB_WIDTH = 3;
-const VB_HEIGHT = 3;
-const MPL_WIDTH = VB_WIDTH / SVG_WIDTH;
-const MPL_HEIGHT = VB_HEIGHT / SVG_HEIGHT;
+import {RADIUS, CELLSIZE, SVG_WIDTH, SVG_HEIGHT} from './chunk-edit/ChunkEdit.config.js';
+
+const SelectionRect = ({p1, p2}) => (<rect 
+  className="ChunkEdit_Selection"
+  x={p1.x < p2.x ? p1.x : p2.x}
+  y={p1.y < p2.y ? p1.y : p2.y}
+  width={Math.abs(p1.x - p2.x)}
+  height={Math.abs(p1.y - p2.y)}
+/>);
+// width={p1.x < p2.x ? p2.x - p1.x : p1.x - p2.x}
+// height={p1.y < p2.y ? p2.y - p1.y : p1.y - p2.y}
+
+const ACTION = {
+  SELECT: 'SELECT'
+  , MOVE: 'MOVE'
+  , LINK: 'LINK'
+}
+
+class OnHover extends React.PureComponent {
+  constructor() {
+    super();
+    this.state = {hover: false};
+  }
+  handleHover(hover) {
+    this.props.onHover(hover);
+    this.setState({hover});
+  }
+  
+  render() {
+    return (<g 
+      onMouseEnter={() => this.handleHover(true)} 
+      onMouseLeave={() => this.handleHover(false)}>
+      {this.props.children(this.state.hover)}
+    </g>);
+  }
+}
 
 class ChunkEdit extends React.PureComponent {
   constructor() {
     super();
     this.state = {};
-    this.handleClick = this.handleClick.bind(this);
-    this.onSvgRender = this.onSvgRender.bind(this);
+    this.onCellClick = this.onCellClick.bind(this);
+    this.onMouseDown = this.onMouseDown.bind(this);
+    this.onMouseMove = this.onMouseMove.bind(this);
+    this.onMouseClick = this.onMouseClick.bind(this);
+    this.onMouseUp = this.onMouseUp.bind(this);
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
@@ -32,125 +65,222 @@ class ChunkEdit extends React.PureComponent {
       return {
         chunk
         , nodes: chunk.nodes
-        , bbx: {minX: 0, minY: 0, maxX: 1, maxY: 1, width: 2, height: 2}
+        , bbx: {minX: 0, minY: 0, width: 5, height: 5}
+        , selection: {}
       }
     }
     return {};
   }
-
-  handleClick(e) {
-    e.persist();
-    if (!this._delayedClick) {
-      this._delayedClick = _.debounce(this.onClick, 200);
+  
+  selectNode(id, force) {
+    const selection = _.assign({}, this.state.selection);
+    selection[id] = force === void 0 ? !selection[id] : force;
+    console.log(`selectNode(${id}, ${force})`)
+    return selection;
+  }
+  
+  selectNodes(nodes) {
+    const selection = _.assign({}, this.state.selection);
+    nodes.forEach(({id, force}) => {
+      selection[id] = force === void 0 ? !selection[id] : force;
+    })
+    return selection;
+  }
+  
+  onCellClick(e, x, y) {
+    if (_.every(this.state.nodes, (node) => node.x !== x || node.y !== y)) {
+      this.createNode(e, x, y);
     }
-    if (this.clickedOnce) {
-      this._delayedClick.cancel();
-      this.clickedOnce = false;
-      this.onDoubleClick(e);
-    } else {
-      this._delayedClick(e);
-      this.clickedOnce = true;
-    }
   }
 
-  onClick(e) {
-    this.clickedOnce = undefined;
-    const bbx = this.svg.getBoundingClientRect();
-    const tx = this.getXY(e.clientX - bbx.left
-      , this.state.bbx.minX
-      , this.state.bbx.width
-      , SVG_WIDTH
-    );
-    const ty = this.getXY(e.clientY - bbx.top
-      , this.state.bbx.minY
-      , this.state.bbx.height
-      , SVG_HEIGHT
-    );
-    this.createNode(tx, ty);
-  }
-
-  onDoubleClick(e) {
-    // const tx = );
-    // const ty = this.getCoord(e.clientY - this.offsetY);
-    // console.log(e.clientX - this.offsetX, tx, tx * MPL_WIDTH);
-    // console.log(e.clientY - this.offsetY, ty, tx * MPL_HEIGHT);
-    // 
-    // this.createNode(tx, ty);
-  }
-
-  getXY(xy, minDimension, dimension, maxDimension) {
-    return minDimension + Math.floor(xy / maxDimension * dimension);
-  }
-
-  onSvgRender (svg) {
-    this.svg = svg;
-  }
-
-  createNode(x, y) {
-    const node = {id: _.size(this.state.nodes), x, y};
-    console.log(node)
-    const bbx = this.state.bbx;
-    if (x === bbx.minX) {
-      bbx.minX--;
-      // node.x++;
-    } else if (x === bbx.maxX) {
-      bbx.maxX++;
-      // node.x--;
-    }
-    if (y === bbx.minY) {
-      bbx.minY--;
-      node.y++;
-    } else if (y === bbx.maxY) {
-      bbx.maxY++;
-      // node.y--;
-    }
-    bbx.width = bbx.maxX - bbx.minX + 1;
-    bbx.height = bbx.maxY - bbx.minY + 1;
+  createNode(e, x, y) {
+    const node = {id: _.size(this.state.nodes), x, y}
     this.setState({
       nodes: {...this.state.nodes, [node.id]: node}
-      , bbx
     })
   }
-
+  
+  onChangeDimension(x, y) {
+    const {nodes, bbx} = this.state;
+    if (x > 0 || x < 0 && _.every(nodes, node => node.x < bbx.width-1)) {
+      bbx.width += x;
+      this.setState({bbx: {...bbx}});
+    } else if (y > 0 || y < 0 && _.every(nodes, node => node.y < bbx.height-1)) {
+      bbx.height += y;
+      this.setState({bbx: {...bbx}});
+    }
+  }
+  
+  getEventClientXY (e) {
+    const bbx = this.state.localComponent.getBoundingClientRect();
+    const x = (e.clientX - bbx.left) * ((this.state.bbx.width * CELLSIZE) / SVG_WIDTH);
+    const y = (e.clientY - bbx.top) * ((this.state.bbx.height * CELLSIZE) / SVG_HEIGHT);
+    return ({x, y});
+  }
+  
+  onMouseDown(e) {
+    e.persist();
+    const start = this.getEventClientXY(e);
+    this.setState({
+      action: {
+        start
+      }
+    });
+  }
+  
+  onMouseMove(e) {
+    const action = this.state.action;
+    if (action) {
+      switch (action.type) {
+        case ACTION.SELECT:
+          this.setState({action: {...action, rect: this.getEventClientXY(e)}});
+          break;
+        case ACTION.MOVE:
+          console.log(this.state.nodes[0].x)
+          if (_.every(this.state.nodes, node => 
+            node.x < this.state.bbx.width
+            && node.y < this.state.bbx.height
+            && node.x > 0
+            && node.y > 0
+          )) {
+            this.setState({action: {...action, move: this.getEventClientXY(e)}});
+          }
+          break;
+        default: 
+          if (this.state.hoverNode !== null) {
+            this.setState({action: {...action
+                , type: ACTION.MOVE
+              }
+              , selection: this.selectNode(this.state.hoverNode, true)
+            });
+          } else {
+            this.setState({action: {...action
+              , type: ACTION.SELECT
+            }});
+          }
+      }
+    }
+  }
+  
+  onMouseClick(e) {
+  }
+  
+  onMouseUp(e) {
+    const action = this.state.action;
+    if (action) {
+      if (action.rect) {
+        e.stopPropagation();
+        console.log('PROPAGATION STOPPED');
+        const startX = action.start.x < action.rect.x ? action.start.x : action.rect.x;
+        const startY = action.start.y < action.rect.y ? action.start.y : action.rect.y;
+        const endX = action.start.x < action.rect.x ? action.rect.x : action.start.x;
+        const endY = action.start.y < action.rect.y ? action.rect.y : action.start.y;
+        
+        const selection = this.selectNodes(
+          _(this.state.nodes)
+            .filter((node) => {
+              // console.log(startX, startY, endX, endY);
+              // console.log(node.x, node.y
+              //   , node.x * CELLSIZE + CELLSIZE * .5
+              //   , node.y * CELLSIZE + CELLSIZE * .5);
+              // console.log('node'
+              //   , node.x * CELLSIZE + CELLSIZE * .5 - RADIUS
+              //   , node.y * CELLSIZE + CELLSIZE * .5 - RADIUS
+              //   , node.x * CELLSIZE + CELLSIZE * .5 + RADIUS
+              //   , node.y * CELLSIZE + CELLSIZE * .5 + RADIUS
+              // );
+              // console.log('node'
+              //   , startX < node.x * CELLSIZE + CELLSIZE * .5 - RADIUS
+              //   , startY < node.y * CELLSIZE + CELLSIZE * .5 - RADIUS
+              //   , endX > node.x * CELLSIZE + CELLSIZE * .5 + RADIUS
+              //   , endY > node.y * CELLSIZE + CELLSIZE * .5 + RADIUS
+              // );
+              // console.log('-');
+              return (startX < node.x * CELLSIZE + CELLSIZE * .5 - RADIUS
+                && startY < node.y * CELLSIZE + CELLSIZE * .5 - RADIUS
+                && endX > node.x * CELLSIZE + CELLSIZE * .5 + RADIUS
+                && endY > node.y * CELLSIZE + CELLSIZE * .5 + RADIUS
+              );
+            })
+            .map(node => ({id: node.id, force: true}))
+            .value()
+        );
+        this.setState({selection, action: null});
+      } else if (action.move) {
+        e.stopPropagation();
+        console.log('PROPAGATION STOPPED');
+        this.setState({action: null});
+      } else {
+        this.setState({action: null});
+      }
+    }
+  }
   render() {
     const {chunk} = this.props;
     if (!chunk) return 'no chunk';
-    const vbWidth = (VB_WIDTH + 1) * (RADIUS * 4)
-    const vbHeight = (VB_HEIGHT + 1) * (RADIUS * 4)
     
-    const {bbx} = this.state;
+    const {bbx, action} = this.state;
+    const viewBox = `${bbx.minX * CELLSIZE} ${bbx.minY * CELLSIZE}`
+      + ` ${bbx.width * CELLSIZE} ${bbx.height * CELLSIZE}`;
     return (<div>
       <div>
-        {JSON.stringify(bbx)}
+        <button onClick={e => this.onChangeDimension(+1, 0)}>X+</button>
+        <button onClick={e => this.onChangeDimension(-1, 0)}>X-</button>
+        <button onClick={e => this.onChangeDimension(0, +1)}>Y+</button>
+        <button onClick={e => this.onChangeDimension(0, -1)}>Y-</button>
+        {JSON.stringify(this.state.selection)}
+        {JSON.stringify(action)}
+        {JSON.stringify(this.state.hoverNode)}
       </div>
-      <svg onClick={this.handleClick}
-                 width={SVG_WIDTH} 
-                 height={SVG_HEIGHT} 
-                 viewBox={`${bbx.minX * 4} ${bbx.minY * 4} ${bbx.width * 4} ${bbx.height * 4}`}
-                 ref={this.onSvgRender}>
-      <rect x={-RADIUS*2} y={-RADIUS*2} 
-        width='100%' height='100%' 
-        fill='green'/>
-      {_.range(bbx.width).map((w) => 
-        _.range(bbx.height).map((h) => (
-        <rect key={w+''+h}
-              className='GridAdd' 
-              x={(bbx.minX + w) * RADIUS * 4 } 
-              y={(bbx.minY + h) * RADIUS * 4}
-              height={RADIUS*4} width={RADIUS*4} />
-      )))}
-      {_.map(this.state.nodes, node => (
-        <circle key={node.id}
-                id={node.id}
-                className='Node'
-                r={RADIUS}
-                x={node.x}
-                y={node.y}
-                cx={(bbx.minX + node.x) * RADIUS * 4 + 2}
-                cy={(bbx.minY + node.y) * RADIUS * 4 + 2}
-                onMouseDown={this.onMouseDown}
-        />))}
-      </svg>
+      <div>
+        <svg onClick={this.handleClick}
+             width={SVG_WIDTH} 
+             height={SVG_HEIGHT} 
+             viewBox={viewBox}
+             onMouseDown={this.onMouseDown}
+             onMouseMove={this.onMouseMove}
+             onMouseUpCapture={this.onMouseUp}
+             onMouseLeave={() => this.setState({action: null})}
+             >
+        <g ref={c => this.setState({localComponent: c})}>
+          <ChunkEditCells 
+            width={bbx.width} 
+            height={bbx.height} 
+            onCellClick={this.onCellClick}/>
+          {_.map(this.state.nodes, node => (
+            <OnHover key={node.id} onHover={hover => {
+                // console.log(`STATE ${node.id} ${hover}`);
+                return this.setState({
+                  hoverNode: hover ? node.id : null
+                })
+              }}>{(hover) => {
+                // console.log(`hover ${node.id} ${hover}`);
+                const selected = !!this.state.selection[node.id];
+                let cx, cy;
+                if (selected && action && action.move) {
+                  cx = node.x * CELLSIZE + action.move.x - action.start.x;
+                  cx = Math.round(cx / CELLSIZE) * CELLSIZE + CELLSIZE * .5;
+                  cy = node.y * CELLSIZE + action.move.y - action.start.y;
+                  cy = Math.round(cy / CELLSIZE) * CELLSIZE + CELLSIZE * .5;
+                } else {
+                  cx=node.x * CELLSIZE + CELLSIZE * .5
+                  cy=node.y * CELLSIZE + CELLSIZE * .5
+                }
+                return (<ChunkEditNode 
+                  selected={selected}
+                  hover={hover}
+                  node={node}
+                  onMouseUp={e => this.setState({selection: this.selectNode(node.id)})}
+                  cx={cx}
+                  cy={cy}/>
+              )}}
+            </OnHover>
+          ))}
+          {action && action.rect && <SelectionRect 
+            p1={action.start} p2={action.rect}/>}
+        </g>
+        </svg>
+      </div>
     </div>);
   }
 }
