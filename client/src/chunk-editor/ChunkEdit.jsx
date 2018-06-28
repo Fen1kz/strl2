@@ -41,38 +41,55 @@ const ACTION = {
   , LINK: 'LINK'
 };
 
-class OnHover extends React.PureComponent {
+let NODE_ID_COUNTER = 0;
+
+class Keyboard extends React.PureComponent {
   constructor() {
     super();
-    this.state = {hover: false};
+    this.onKeyPress = this.onKeyPress.bind(this);
+    this.onKeyUp = this.onKeyUp.bind(this);
+  }
+  componentDidMount() {
+    document.addEventListener('keypress', this.onKeyPress);
+    document.addEventListener('keyup', this.onKeyUp);
   }
 
-  handleHover(hover) {
-    this.setState({hover});
+  componentWillUnmount() {
+    document.removeEventListener(this.onKeyPress);   
+    document.removeEventListener(this.onKeyUp);   
+  }
+
+  onKeyPress(e) {
+    if (this.props.onKeyPress) {
+      this.props.onKeyPress(e);
+    }
+  }
+
+  onKeyUp(e) {
+    if (this.props.onKeyUp) {
+      this.props.onKeyUp(e);
+    }
   }
 
   render() {
-    return (<g
-      onMouseEnter={() => this.handleHover(true)}
-      onMouseLeave={() => this.handleHover(false)}>
-      {this.props.children(this.state.hover)}
-    </g>);
+    return null;
   }
 }
 
 class ChunkEdit extends React.PureComponent {
   constructor() {
     super();
-    this.NODE_ID_COUNTER = 0;
     this.state = {};
     this.onMouseDown = this.onMouseDown.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
+    this.onKey = this.onKey.bind(this);
   }
 
   static getDerivedStateFromProps(nextProps, prevState) {
     const {chunk} = nextProps;
     if (chunk && chunk !== prevState.chunk) {
+      NODE_ID_COUNTER = _(chunk.nodes).map('id').max() + 1 || 0;
       return {
         chunk
         , nodes: chunk.nodes
@@ -129,9 +146,15 @@ class ChunkEdit extends React.PureComponent {
       if (e.shiftKey) {
         type = ACTION.SELECT_ADD;
       } else {
-        type = ACTION.SELECT;
-        start.x = int2global(this.state.nodes[nodeId].x);
-        start.y = int2global(this.state.nodes[nodeId].y);
+        this.setupDblClick('MouseDown', () => {
+          type = ACTION.SELECT;
+          start.x = int2global(this.state.nodes[nodeId].x);
+          start.y = int2global(this.state.nodes[nodeId].y);
+        }, () => {
+          type = ACTION.LINK;
+          start.x = int2global(this.state.nodes[nodeId].x);
+          start.y = int2global(this.state.nodes[nodeId].y);
+        });
       }
     } else if (e.ctrlKey) {
       type = ACTION.CREATE;
@@ -147,15 +170,18 @@ class ChunkEdit extends React.PureComponent {
       const action = this.state.action;
       switch (action.type) {
         case ACTION.SELECT_RECT:
-        case ACTION.SELECT_ADD:
         case ACTION.DESELECT:
           this.setState({action: {...action, rect: this.getEventGlobalPoint(e), type: ACTION.SELECT_RECT}});
           break;
         // case ACTION.CREATE:
         //   break;
-        // case ACTION.LINK:
-        //   break;
+        case ACTION.LINK:
+          this.setState({
+            action: {...action, link: this.getEventGlobalPoint(e)}
+          });
+          break;
         case ACTION.SELECT:
+        case ACTION.SELECT_ADD:
           if (this.isSelected(action.nodeId)) {
             this.setState({
               action: this.onMoveActionMove(e, action)
@@ -163,7 +189,9 @@ class ChunkEdit extends React.PureComponent {
           } else {
             this.setState({
               action: this.onMoveActionMove(e, action)
-              , selection: this.selectNode(action.nodeId, true, true)
+              , selection: this.selectNode(action.nodeId
+                , true
+                , action.type === ACTION.SELECT)
             });
           }
           break;
@@ -178,7 +206,9 @@ class ChunkEdit extends React.PureComponent {
     const move = this.getEventGlobalPoint(e);
     move.x = global2int(move.x - action.start.x);
     move.y = global2int(move.y - action.start.y);
-    if (_.every(this.state.nodes, node => {
+    // move.x = (move.x - action.start.x);
+    // move.y = (move.y - action.start.y);
+    if (true || _.every(this.state.nodes, node => {
           const nodeX = node.x + move.x;
           const nodeY = node.y + move.y;
           return (!this.isSelected(node.id) || (
@@ -228,17 +258,28 @@ class ChunkEdit extends React.PureComponent {
           }));
           break;
         case ACTION.DESELECT:
-          if (this._dblClickOne) {
-            state.nodes = this.createNode(e);
-          } else {
+          this.setupDblClick('MouseUp', () => {
             state.selection = {};
-            this._dblClickOne = true;
-            this._dblClickTimeout = window.setTimeout(() => this._dblClickOne = false, 200);
-          }
+          }, () => {
+            state.nodes = this.createNode(e);
+          });
           break;
       }
       state.action = null;
       this.setState(state);
+    }
+  }
+  
+  setupDblClick(propName, firstClick, secondClick) {
+    const realPropName = '_dblClick' + propName;
+    if (!this[realPropName]) {
+      firstClick();
+      this[realPropName] = true;
+      window.setTimeout(() => {
+        this[realPropName] = false;
+      }, 200);
+    } else {
+      secondClick();
     }
   }
 
@@ -247,7 +288,7 @@ class ChunkEdit extends React.PureComponent {
     node.x = global2intFloor(node.x);
     node.y = global2intFloor(node.y);
     if (!_.some(this.state.nodes, n => n.x === node.x && n.y === node.y)) {
-      node.id = this.NODE_ID_COUNTER++;
+      node.id = NODE_ID_COUNTER++;
       const nodes = Object.assign({}, this.state.nodes);
       nodes[node.id] = node;
       return nodes;
@@ -271,6 +312,21 @@ class ChunkEdit extends React.PureComponent {
       .map(node => node.id)
       .value();
   }
+  
+  onKey(e) {
+    const symbol = String.fromCharCode(e.keyCode).toUpperCase();
+    const nodes = {};
+    const selection = _(this.state.selection)
+      .pickBy()
+      .keys()
+      .forEach(nodeId => {
+        nodes[nodeId] = Object.assign({}, this.state.nodes[nodeId]);
+        nodes[nodeId].text = symbol;
+      });
+    if (_.size(nodes) > 0) {
+      this.setState({nodes: Object.assign({}, this.state.nodes, nodes)});
+    }
+  }
 
   render() {
     const {chunk} = this.props;
@@ -285,6 +341,8 @@ class ChunkEdit extends React.PureComponent {
         <button onClick={e => this.onChangeDimension(-1, 0)}>X-</button>
         <button onClick={e => this.onChangeDimension(0, +1)}>Y+</button>
         <button onClick={e => this.onChangeDimension(0, -1)}>Y-</button>
+        {JSON.stringify(NODE_ID_COUNTER)}
+        u{JSON.stringify(this._dblClickMouseUp)}
       </div>
       <div>
         <svg onClick={this.handleClick}
@@ -296,40 +354,39 @@ class ChunkEdit extends React.PureComponent {
              onMouseUp={this.onMouseUp}
              onMouseLeave={(e) => this.onMouseUp(e)}
         >
-          <rect x="-500" y="-500" width="1000" height="1000" fill="blue"/>
+          <Keyboard onKeyPress={this.onKey}/>
           <g ref={c => this.setState({localComponent: c})}>
             <ChunkEditCells
               width={bbx.width}
               height={bbx.height}
             />
-            {_.map(this.state.nodes, node => (
-              <OnHover key={node.id}>{(hover) => {
+            {_.map(this.state.nodes, node => {
                 const selected = !!this.isSelected(node.id);
                 let cx, cy;
                 if (selected && action && action.move) {
                   cx = int2global(node.x + action.move.x);
                   cy = int2global(node.y + action.move.y);
+                  // cx = int2global(node.x) + action.move.x;
+                  // cy = int2global(node.y) + action.move.y;
                 } else {
                   cx = int2global(node.x);
                   cy = int2global(node.y);
                 }
-                return (<React.Fragment>
-                  <ChunkEditNode
-                    onMouseDown={e => this.onMouseDown(e, node.id)}
-                    selected={selected}
-                    hover={hover}
-                    node={node}
-                    cx={cx}
-                    cy={cy}
-                  />
-                  {hover && <circle r={RADIUS * 1.3} cx={cx} cy={cy} className="ChunkEdit_Node_Controls"/>}
-                </React.Fragment>
-                )
-              }}
-              </OnHover>
-            ))}
+                return (<ChunkEditNode
+                  key={node.id}
+                  onMouseDown={e => this.onMouseDown(e, node.id)}
+                  selected={selected}
+                  node={node}
+                  cx={cx}
+                  cy={cy}
+                />);
+            })}
             {action && action.rect && <SelectionRect
               p1={action.start} p2={action.rect}/>}
+            {action && action.link && <line className="ChunkEdit_LinkLine"
+              x1={action.start.x} y1={action.start.y}
+              x2={action.link.x} y2={action.link.y}
+            />}
           </g>
         </svg>
       </div>

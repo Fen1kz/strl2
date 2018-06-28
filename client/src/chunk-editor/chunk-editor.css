@@ -3,9 +3,9 @@
 }
 
 .ChunkEdit_Cell {
-  fill: #aaa;
+  fill: #ddd;
   stroke-width: 1px;
-  stroke: #444;
+  stroke: #222;
   cursor: pointer;
 }
 .ChunkEdit_Cell:hover {
@@ -13,28 +13,32 @@
 }
 
 .ChunkEdit_Node {
-  fill: #444;
+  fill: #fff;
+  stroke-width: 1px;
+  stroke: #222;
 }
 
 .ChunkEdit_Node.Selected {
   stroke-width: 1px;
-  stroke: #4f4;
+  stroke-dasharray: 3px;
+  stroke: #77F;
 }
 
-.ChunkEdit_Node.Hover {
-  fill: #4f4;
-}
-
-.ChunkEdit_Node_Controls {
-  fill: none;
-  stroke-width: 5px;
-  stroke: black;
-  opacity: .5;
+.ChunkEdit_Node_Text {
+  fill: #222;
+  font-size: 14px;
+  text-anchor: middle;
+  alignment-baseline: central;
 }
 
 .ChunkEdit_Selection {
   fill: none;
   stroke-width: 1px;
   stroke-dasharray: 5px;
-  stroke: #4f4;
+  stroke: #77F;
+}
+
+.ChunkEdit_LinkLine {
+  stroke-width: 1px;
+  stroke: #272;
 }
