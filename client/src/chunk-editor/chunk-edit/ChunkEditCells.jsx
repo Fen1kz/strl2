@@ -12,13 +12,12 @@ export const ChunkEditCell = ({x, y, ...props}) => (<rect
   {...props}
 />);
 
-export const ChunkEditCells = ({width, height, onCellClick}) => (<g>
+export const ChunkEditCells = ({width, height}) => (<g>
   {_.range(width).map(x => 
     _.range(height).map(y => (
       <ChunkEditCell 
         key={x+''+y} 
-        x={x} y={y}
-        onMouseUp={(e) => onCellClick(e, x, y)}/>
+        x={x} y={y}/>
       )
     )
   )}
