@@ -95,7 +95,7 @@ class ChunkEdit extends React.PureComponent {
         , nodes: chunk.nodes || {}
         , bbx: {minX: 0, minY: 0, width: 5, height: 5}
         , selection: {}
-        , links: chunk.links || []
+        , links: chunk.links || {}
       }
     }
     return {};
@@ -257,21 +257,22 @@ class ChunkEdit extends React.PureComponent {
             const sourceId = action.nodeId;
             const targetId = nodeId;
             if (sourceId !== targetId) {
-              state.links = this.state.links.slice();
+              state.links = Object.assign({}, this.state.links);
               const existingLink = _.find(this.state.links, link =>
                 (link.sourceId === sourceId && link.targetId === targetId)
                 || (link.sourceId === targetId && link.targetId === sourceId)
               );
               if (!existingLink) {
-                state.links.push({sourceId, targetId, type: 1});
+                const id = NODE_ID_COUNTER++;
+                state.links[id] = {id, sourceId, targetId, type: 1};
               } else {
-                _.remove(state.links, existingLink);
+                delete state.links[existingLink.id];
               }
             }
           }
           break;
         case ACTION.MOVE:
-          state.nodes = _.map(this.state.nodes, node => !this.isSelected(node.id) ? node : ({
+          state.nodes = _.mapValues(this.state.nodes, node => !this.isSelected(node.id) ? node : ({
             ...node
             , x: node.x + action.move.x
             , y: node.y + action.move.y
@@ -379,8 +380,6 @@ class ChunkEdit extends React.PureComponent {
         <button onClick={e => this.onChangeDimension(-1, 0)}>X-</button>
         <button onClick={e => this.onChangeDimension(0, +1)}>Y+</button>
         <button onClick={e => this.onChangeDimension(0, -1)}>Y-</button>
-        {JSON.stringify(NODE_ID_COUNTER)}
-        u{JSON.stringify(this._dblClickMouseUp)}
       </div>
       <div>
         <svg onClick={this.handleClick}
@@ -398,11 +397,11 @@ class ChunkEdit extends React.PureComponent {
               width={bbx.width}
               height={bbx.height}
             />
-            {_.map(this.state.links, ({sourceId, targetId, type}, index) => {
+            {_.map(this.state.links, ({sourceId, targetId, type}, linkId) => {
               const sourcePoint = this.getNodeXY(sourceId);
               const targetPoint = this.getNodeXY(targetId);
               return <line
-                key={index}
+                key={linkId}
                 className={`ChunkEditLink ChunkEditLink-${type}`}
                 x1={sourcePoint.x} y1={sourcePoint.y}
                 x2={targetPoint.x} y2={targetPoint.y}
@@ -429,6 +428,11 @@ class ChunkEdit extends React.PureComponent {
             />}
           </g>
         </svg>
+      </div>
+      <div>        
+        {JSON.stringify(NODE_ID_COUNTER)}
+        u{JSON.stringify(this.state.nodes)}
+        u{JSON.stringify(this.state.links)}
       </div>
     </div>);
   }
