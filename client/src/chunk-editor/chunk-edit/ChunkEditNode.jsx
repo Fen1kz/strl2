@@ -2,11 +2,10 @@ import React from 'react';
 import {RADIUS, CELLSIZE} from './ChunkEdit.config.js';
 
 export const ChunkEditNode = ({node
-  , selected, hover
-  , onMouseDown
+  , selected
   , cx, cy
   , ...props}) => (
-  <g onMouseDown={onMouseDown}>
+  <g {...props}>
   <circle
     id={node.id}
     className={`ChunkEdit_Node${selected?' Selected':''}`}
@@ -15,7 +14,6 @@ export const ChunkEditNode = ({node
     data-y={node.y}
     cx={cx}
     cy={cy}
-    {...props}
     />
   <text className='ChunkEdit_Node_Text'
     x={cx} y={cy}>

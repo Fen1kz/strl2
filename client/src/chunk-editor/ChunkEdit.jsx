@@ -22,7 +22,7 @@ import {
 } from './chunk-edit/ChunkEdit.config.js';
 
 const SelectionRect = ({p1, p2}) => (<rect
-  className="ChunkEdit_Selection"
+  className="ChunkEdit_Selection_Rect"
   x={p1.x < p2.x ? p1.x : p2.x}
   y={p1.y < p2.y ? p1.y : p2.y}
   width={Math.abs(p1.x - p2.x)}
@@ -55,8 +55,8 @@ class Keyboard extends React.PureComponent {
   }
 
   componentWillUnmount() {
-    document.removeEventListener(this.onKeyPress);   
-    document.removeEventListener(this.onKeyUp);   
+    document.removeEventListener('keypress', this.onKeyPress);
+    document.removeEventListener('keyup', this.onKeyUp);
   }
 
   onKeyPress(e) {
@@ -92,9 +92,10 @@ class ChunkEdit extends React.PureComponent {
       NODE_ID_COUNTER = _(chunk.nodes).map('id').max() + 1 || 0;
       return {
         chunk
-        , nodes: chunk.nodes
+        , nodes: chunk.nodes || {}
         , bbx: {minX: 0, minY: 0, width: 5, height: 5}
         , selection: {}
+        , links: chunk.links || []
       }
     }
     return {};
@@ -167,48 +168,49 @@ class ChunkEdit extends React.PureComponent {
   onMouseMove(e) {
     if (this.state.action) {
       e.stopPropagation();
+      const eventPoint = this.getEventGlobalPoint(e);
       const action = this.state.action;
-      switch (action.type) {
-        case ACTION.SELECT_RECT:
-        case ACTION.DESELECT:
-          this.setState({action: {...action, rect: this.getEventGlobalPoint(e), type: ACTION.SELECT_RECT}});
-          break;
-        // case ACTION.CREATE:
-        //   break;
-        case ACTION.LINK:
-          this.setState({
-            action: {...action, link: this.getEventGlobalPoint(e)}
-          });
-          break;
-        case ACTION.SELECT:
-        case ACTION.SELECT_ADD:
-          if (this.isSelected(action.nodeId)) {
+      if (action.moved || 10 < (action.start.x - eventPoint.x) * (action.start.x - eventPoint.x) + (action.start.y - eventPoint.y) * (action.start.y - eventPoint.y)) {
+        switch (action.type) {
+          case ACTION.SELECT_RECT:
+          case ACTION.DESELECT:
+            this.setState({action: {...action, rect: eventPoint, type: ACTION.SELECT_RECT, moved: true}});
+            break;
+          // case ACTION.CREATE:
+          //   break;
+          case ACTION.LINK:
             this.setState({
-              action: this.onMoveActionMove(e, action)
+              action: {...action, link: eventPoint, moved: true}
             });
-          } else {
-            this.setState({
-              action: this.onMoveActionMove(e, action)
-              , selection: this.selectNode(action.nodeId
-                , true
-                , action.type === ACTION.SELECT)
-            });
-          }
-          break;
-        case ACTION.MOVE:
-          this.setState({action: this.onMoveActionMove(e, action)});
-          break;
+            break;
+          case ACTION.SELECT:
+          case ACTION.SELECT_ADD:
+            if (this.isSelected(action.nodeId)) {
+              this.setState({
+                action: this.onMoveActionMove(action, eventPoint)
+              });
+            } else {
+              this.setState({
+                action: this.onMoveActionMove(action, eventPoint)
+                , selection: this.selectNode(action.nodeId
+                  , true
+                  , action.type === ACTION.SELECT)
+              });
+            }
+            break;
+          case ACTION.MOVE:
+            this.setState({action: this.onMoveActionMove(action, eventPoint)});
+            break;
+        }
       }
     }
   }
 
-  onMoveActionMove(e, action) {
-    const move = this.getEventGlobalPoint(e);
+  onMoveActionMove(action, eventPoint) {
+    const move = eventPoint;
     move.x = global2int(move.x - action.start.x);
     move.y = global2int(move.y - action.start.y);
-    // move.x = (move.x - action.start.x);
-    // move.y = (move.y - action.start.y);
-    if (true || _.every(this.state.nodes, node => {
+    if (_.every(this.state.nodes, node => {
           const nodeX = node.x + move.x;
           const nodeY = node.y + move.y;
           return (!this.isSelected(node.id) || (
@@ -223,14 +225,16 @@ class ChunkEdit extends React.PureComponent {
             ))));
         }
       )) {
-      return ({...action, move, type: ACTION.MOVE});
+      return ({...action, move, type: ACTION.MOVE, moved: true});
     } else {
       return action;
     }
   }
 
-  onMouseUp(e) {
+  onMouseUp(e, nodeId = null) {
     if (this.state.action) {
+      e.stopPropagation();
+      const eventPoint = this.getEventGlobalPoint(e);
       const state = {};
       const action = this.state.action;
       switch (action.type) {
@@ -245,11 +249,27 @@ class ChunkEdit extends React.PureComponent {
           break;
         case ACTION.CREATE:
           if (e.ctrlKey) {
-            state.nodes = this.createNode(e);
+            state.nodes = this.createNode(eventPoint);
           }
           break;
-        // case ACTION.LINK:
-        //   break;
+        case ACTION.LINK:
+          if (nodeId !== null) {
+            const sourceId = action.nodeId;
+            const targetId = nodeId;
+            if (sourceId !== targetId) {
+              state.links = this.state.links.slice();
+              const existingLink = _.find(this.state.links, link =>
+                (link.sourceId === sourceId && link.targetId === targetId)
+                || (link.sourceId === targetId && link.targetId === sourceId)
+              );
+              if (!existingLink) {
+                state.links.push({sourceId, targetId, type: 1});
+              } else {
+                _.remove(state.links, existingLink);
+              }
+            }
+          }
+          break;
         case ACTION.MOVE:
           state.nodes = _.map(this.state.nodes, node => !this.isSelected(node.id) ? node : ({
             ...node
@@ -261,7 +281,7 @@ class ChunkEdit extends React.PureComponent {
           this.setupDblClick('MouseUp', () => {
             state.selection = {};
           }, () => {
-            state.nodes = this.createNode(e);
+            state.nodes = this.createNode(eventPoint);
           });
           break;
       }
@@ -273,18 +293,21 @@ class ChunkEdit extends React.PureComponent {
   setupDblClick(propName, firstClick, secondClick) {
     const realPropName = '_dblClick' + propName;
     if (!this[realPropName]) {
+      console.log(propName, 'firstClick');
       firstClick();
       this[realPropName] = true;
       window.setTimeout(() => {
+        console.log(propName, 'timeout');
         this[realPropName] = false;
       }, 200);
     } else {
+      console.log(propName, 'secondClick');
       secondClick();
     }
   }
 
-  createNode(e) {
-    const node = this.getEventGlobalPoint(e);
+  createNode(eventPoint) {
+    const node = eventPoint;
     node.x = global2intFloor(node.x);
     node.y = global2intFloor(node.y);
     if (!_.some(this.state.nodes, n => n.x === node.x && n.y === node.y)) {
@@ -328,6 +351,21 @@ class ChunkEdit extends React.PureComponent {
     }
   }
 
+  getNodeXY(nodeId) {
+    const node = this.state.nodes[nodeId];
+    if (this.isSelected(nodeId) && this.state.action && this.state.action.move) {
+      return {
+        x: int2global(node.x + this.state.action.move.x)
+        , y: int2global(node.y + this.state.action.move.y)
+      };
+    } else {
+      return {
+        x: int2global(node.x)
+        , y: int2global(node.y)
+      };
+    }
+  }
+
   render() {
     const {chunk} = this.props;
     if (!chunk) return 'no chunk';
@@ -360,30 +398,32 @@ class ChunkEdit extends React.PureComponent {
               width={bbx.width}
               height={bbx.height}
             />
+            {_.map(this.state.links, ({sourceId, targetId, type}, index) => {
+              const sourcePoint = this.getNodeXY(sourceId);
+              const targetPoint = this.getNodeXY(targetId);
+              return <line
+                key={index}
+                className={`ChunkEditLink ChunkEditLink-${type}`}
+                x1={sourcePoint.x} y1={sourcePoint.y}
+                x2={targetPoint.x} y2={targetPoint.y}
+              />
+            })}
             {_.map(this.state.nodes, node => {
                 const selected = !!this.isSelected(node.id);
-                let cx, cy;
-                if (selected && action && action.move) {
-                  cx = int2global(node.x + action.move.x);
-                  cy = int2global(node.y + action.move.y);
-                  // cx = int2global(node.x) + action.move.x;
-                  // cy = int2global(node.y) + action.move.y;
-                } else {
-                  cx = int2global(node.x);
-                  cy = int2global(node.y);
-                }
+                const nodePoint = this.getNodeXY(node.id);
                 return (<ChunkEditNode
                   key={node.id}
-                  onMouseDown={e => this.onMouseDown(e, node.id)}
-                  selected={selected}
                   node={node}
-                  cx={cx}
-                  cy={cy}
+                  selected={selected}
+                  cx={nodePoint.x}
+                  cy={nodePoint.y}
+                  onMouseDown={e => this.onMouseDown(e, node.id)}
+                  onMouseUp={e => this.onMouseUp(e, node.id)}
                 />);
             })}
             {action && action.rect && <SelectionRect
               p1={action.start} p2={action.rect}/>}
-            {action && action.link && <line className="ChunkEdit_LinkLine"
+            {action && action.link && <line className="ChunkEdit_Selection_Link"
               x1={action.start.x} y1={action.start.y}
               x2={action.link.x} y2={action.link.y}
             />}

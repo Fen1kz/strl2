@@ -31,14 +31,24 @@
   alignment-baseline: central;
 }
 
-.ChunkEdit_Selection {
+.ChunkEdit_Selection_Rect {
   fill: none;
   stroke-width: 1px;
   stroke-dasharray: 5px;
   stroke: #77F;
 }
 
-.ChunkEdit_LinkLine {
+.ChunkEdit_Selection_Link {
   stroke-width: 1px;
+  stroke-dasharray: 5px;
   stroke: #272;
+  pointer-events: none;
+}
+
+
+
+.ChunkEditLink {
+  stroke-width: 10px;
+  stroke: #222;
+  opacity: .5;
 }
