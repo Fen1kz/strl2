@@ -11,6 +11,8 @@ import LoadData from "../util/LoadData";
 import ChunkEditCells from './chunk-edit/ChunkEditCells';
 import ChunkEditNode from './chunk-edit/ChunkEditNode';
 
+import {GlobalKeyboard as Keyboard} from '../util/Keyboard';
+
 import {
   RADIUS,
   CELLSIZE,
@@ -42,39 +44,6 @@ const ACTION = {
 };
 
 let NODE_ID_COUNTER = 0;
-
-class Keyboard extends React.PureComponent {
-  constructor() {
-    super();
-    this.onKeyPress = this.onKeyPress.bind(this);
-    this.onKeyUp = this.onKeyUp.bind(this);
-  }
-  componentDidMount() {
-    document.addEventListener('keypress', this.onKeyPress);
-    document.addEventListener('keyup', this.onKeyUp);
-  }
-
-  componentWillUnmount() {
-    document.removeEventListener('keypress', this.onKeyPress);
-    document.removeEventListener('keyup', this.onKeyUp);
-  }
-
-  onKeyPress(e) {
-    if (this.props.onKeyPress) {
-      this.props.onKeyPress(e);
-    }
-  }
-
-  onKeyUp(e) {
-    if (this.props.onKeyUp) {
-      this.props.onKeyUp(e);
-    }
-  }
-
-  render() {
-    return null;
-  }
-}
 
 class ChunkEdit extends React.PureComponent {
   constructor() {

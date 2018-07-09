@@ -3,6 +3,7 @@ import './App.css';
 import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 
 import ChunkEditorPage from './chunk-editor/ChunkEditorPage';
+import GamePage from './game/GamePage';
 
 class App extends Component {
   constructor () {
@@ -20,6 +21,7 @@ class App extends Component {
             </div>
             <div>
               <Route path="/chunk" component={ChunkEditorPage} />
+              <Route path="/" component={GamePage} />
             </div>
           </div>
         </Router>

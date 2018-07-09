@@ -1,0 +1,11 @@
+.Tile text {
+    font: 12px monospace;
+    text-anchor: middle;
+    alignment-baseline: central;
+}
+
+.Tile rect {
+    fill: none;
+    stroke-width: 1px;
+    stroke: #777;
+}

@@ -5,9 +5,10 @@ import App from './App';
 
 import { Provider } from 'react-redux';
 import { createStore, compose, applyMiddleware } from 'redux';
-import reducer from './reducer';
+import reducer from './core/rdx.core.reducer';
+
 import { createEpicMiddleware } from 'redux-observable';
-import epics from './epics';
+import epics from './core/rdx.core.epics';
 
 const epicMiddleware = createEpicMiddleware();
 
