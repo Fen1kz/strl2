@@ -74,7 +74,7 @@ export class GamePage extends React.Component {
 
   render() {
     const {game, player} = this.props;
-    this.camera.setTo(player);
+    this.camera.setTo({x: 0, y: 0});
 
     return (<div>
       <div>

@@ -4,8 +4,8 @@ import * as op from "rxjs/operators";
 import {ofType} from "redux-observable";
 
 import CONST_GAME from "./rdx.game._";
-import {action$setGameRunning} from './rdx.game.actions';
-import {selectQueueFirst} from './rdx.game.selectors';
+import {action$gameLoopStart} from './rdx.game.actions';
+import {selectGame, selectQueueFirst} from './rdx.game.selectors';
 
 const fps = 1;
 const timeFrameDuration = 1000 / fps;
@@ -20,46 +20,31 @@ const createGameLoopStream = (actions$) => {
   )
 };
 
+const validActionFilter = action => action.valid === void 0;
+const validActionSet = cb => action => action.valid = !!cb();
+
+const isGameStateValid = (state$) => selectGame(state$.value).isValid();
+
 export default [
-  (actions$, state$) => Rx.merge(
-    actions$.pipe(ofType(CONST_GAME.gameLoopStart), op.mapTo(true))
+  (actions$, state$) => actions$.pipe(
+    ofType(CONST_GAME.gameLoopStart)
+    , op.filter(validActionFilter)
+    , op.tap(validActionSet(() => isGameStateValid(state$)))
+    , op.skip()
+  )
+  , (actions$, state$) => Rx.merge(
+    actions$.pipe(ofType(CONST_GAME.gameLoopStart)
+      , op.tap(console.log)
+      , op.map(a => a.valid))
     , actions$.pipe(ofType(CONST_GAME.gameLoopStop), op.mapTo(false))
   ).pipe(
     op.distinctUntilChanged()
-    , op.mergeMap(value => {
-      const update$ = Rx.of(value).pipe(
-        op.filter(_.identity)
-        , op.switchMap(_ => createGameLoopStream(actions$))
-        , op.map(v => selectQueueFirst(state$.value))
-        , op.filter(_.identity)
-        // , op.tap(v => console.log('update', v))
-      );
-
-      return Rx.merge(
-        update$
-        , Rx.of(action$setGameRunning(value))
-      );
-    })
+    // , op.tap(console.log)
+    , op.filter(_.identity)
+    , op.switchMap(_ => createGameLoopStream(actions$))
+    // , op.map(i => ({type: 'interval', payload: i}))
+    // , op.tap(console.log)
+    , op.map(_ => selectQueueFirst(state$.value))
+    , op.filter(_.identity)
   )
 ];
-
-// export default [
-//   (actions$, state$) => Rx.merge(
-//     actions$.pipe(ofType(CONST_GAME.gameLoopStart), op.mapTo(true))
-//     , actions$.pipe(ofType(CONST_GAME.gameLoopStop), op.mapTo(false))
-//   ).pipe(
-//     op.distinctUntilChanged()
-//     , op.mergeMap(action => Rx.of(action).pipe(
-//       op.filter(_.identity)
-//       , op.switchMap(_ => createGameLoopStream(actions$))
-//       , op.flatMap(() => {
-//         return Rx.NEVER;
-//       })
-//     ))
-//     , op.filter(_.identity)
-//     , op.switchMap(_ => createGameLoopStream(actions$))
-//     , op.flatMap(() => {
-//       return Rx.NEVER;
-//     })
-//   )
-// ];

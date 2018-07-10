@@ -8,9 +8,9 @@ export const action$gameLoopStop = () => ({
   type: CONST_GAME.gameLoopStop
 });
 
-export const action$setGameRunning = (value) => ({
-  type: CONST_GAME.setGameRunning
-  , payload: value
+
+export const action$reactGameMounted = () => ({
+  type: CONST_GAME.reactGameMounted
 });
 
 export const action$playerMove = (x, y) => ({

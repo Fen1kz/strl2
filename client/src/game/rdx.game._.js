@@ -1,6 +1,6 @@
 export default {
   gameLoopStart: 'gameLoopStart'
   , gameLoopStop: 'gameLoopStop'
-  , setGameRunning: 'setGameRunning'
+  , reactGameMounted: 'reactGameMounted'
   , playerMove: 'playerMove'
 };
