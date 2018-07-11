@@ -1,9 +1,9 @@
 import _ from 'lodash';
 import {Record} from 'immutable';
+import Point from './Point';
 
 export class PlayerModel extends Record({
-  x: void 0
-  , y: void 0
+  pos: new Point()
 }) {
 }
 

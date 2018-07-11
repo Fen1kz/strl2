@@ -1,19 +1,19 @@
 export const getChunkList = () => ({
   type: 'getChunkList',
-  payload: {}
+  data: {}
 });
 
 export const getChunkListSuccess = (chunks) => ({
   type: 'getChunkListSuccess',
-  payload: chunks
+  data: chunks
 });
 
 export const getChunk = (id) => ({
   type: 'getChunk',
-  payload: id
+  data: id
 });
 
 export const getChunkSuccess = (chunk) => ({
   type: 'getChunkSuccess',
-  payload: chunk
+  data: chunk
 });

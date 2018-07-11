@@ -3,39 +3,24 @@ import {connect} from "react-redux";
 
 import {CELLSIZE, CELLSIZE2} from "./const.game";
 
-import {action$gameLoopStart, action$gameLoopStop} from "./rdx.game.actions";
+import {action$loadGameViewComplete, action$gameLoopStart, action$gameLoopStop} from "./rdx.game.actions";
 import {updates$, frames$} from "./rdx.game.epic";
-import {selectGame, selectPlayer} from './rdx.game.selectors'
+import {selectGame, selectPlayer, selectLevel} from './rdx.game.selectors'
 
-// import Level from './level/Level';
-import levelData from './level/level-data.sl1';
+// import Level from './level/Level
 import './game.css';
 
-class Camera {
-  constructor() {
-    this.x = 0;
-    this.y = 0;
-    this.width = 10;
-    this.height = 10;
-  }
-
-  setTo(point) {
-    this.x = point.x;
-    this.y = point.y;
-  }
-
-  getViewBox() {
-    const x = this.x * CELLSIZE;
-    const y = this.y * CELLSIZE;
-    const width = this.width * CELLSIZE;
-    const height = this.height * CELLSIZE;
-    return `${x - width / 2} ${y - height / 2} ${width} ${height}`;
-  }
-}
+const Player = ({player}) => (
+  <g className='Player' style={{
+    transform: `translate(${player.pos.x * CELLSIZE}px, ${player.pos.y * CELLSIZE}px)`
+  }}>
+    <circle cx='0' cy='0' r={CELLSIZE / 2}/>
+  </g>
+);
 
 const Tile = ({tile}) => {
-  const x = tile.x * CELLSIZE;
-  const y = tile.y * CELLSIZE;
+  const x = tile.pos.x * CELLSIZE;
+  const y = tile.pos.y * CELLSIZE;
 
   return (<g className='Tile' style={{
     transform: `translate(${x}px, ${y}px)`
@@ -45,27 +30,22 @@ const Tile = ({tile}) => {
   </g>)
 };
 
-export class GamePage extends React.Component {
+const GameQueue = ({start, queue}) => {
+  let position = start;
+  return (<g>
+    {queue.map((command, idx) => {
+      return <rect width={CELLSIZE2} height={CELLSIZE2} />
+    })}
+  </g>);
+}
+
+export class Game extends React.Component {
   constructor() {
     super();
-
-    this.camera = new Camera();
-
-
-    const level = levelData.map.split('\n')
-      .filter(row => row.length > 0)
-      .map((row, y) => row
-        .split('')
-        .map((text, x) => ({
-          x, y, text
-        }))
-      );
-
-    this.state = {level};
   }
 
   componentDidMount() {
-    this.props.action$gameLoopStart();
+    this.props.action$loadGameViewComplete();
   }
 
   componentWillUnmount() {
@@ -73,37 +53,37 @@ export class GamePage extends React.Component {
   }
 
   render() {
-    const {game, player} = this.props;
-    this.camera.setTo({x: 0, y: 0});
+    const {game, player, level} = this.props;
 
     return (<div>
       <div>
-        <button onClick={e => this.props.action$gameLoopStart()}>START</button>
+        <button onClick={e => this.props.action$loadGameViewComplete()}>START</button>
         <button onClick={e => this.props.action$gameLoopStop()}>STOP</button>
       </div>
       <svg
         width={300}
         height={300}
-        viewBox={this.camera.getViewBox()}
+        viewBox={game.camera.getViewBox()}
       >
         <g className='Level'>
-          {this.state.level.map(row => row.map(tile => {
-            return <Tile key={tile.x + '' + tile.y} tile={tile}/>;
-          }))}
+          {level && level.map(tile => (
+            <Tile key={tile.id} tile={tile}/>
+          ))}
         </g>
         <g className='Entities'>
-          <g className='Player' style={{transform: `translate(${player.x * CELLSIZE}px, ${player.y * CELLSIZE}px)`}}>
-            <circle cx='0' cy='0' r={CELLSIZE / 2}/>
-          </g>
+          {player && <Player player={player}/>}
           <circle cx='-150' cy='-150' r={10}/>
           <circle cx='150' cy='-150' r={10}/>
           <circle cx='-150' cy='150' r={10}/>
           <circle cx='150' cy='150' r={10}/>
         </g>
+        <g className='Overlay'>
+          {player && <GameQueue start={player.pos} queue={queue}/>}
+        </g>
 
       </svg>
       <pre>
-        {JSON.stringify(game.toJS())}
+        {JSON.stringify(game.running)}
       </pre>
     </div>);
   }
@@ -113,6 +93,7 @@ export default connect(
   state => ({
     game: selectGame(state)
     , player: selectPlayer(state)
+    , level: selectLevel(state)
   })
-  , {action$gameLoopStart, action$gameLoopStop}
-)(GamePage);
+  , {action$loadGameViewComplete, action$gameLoopStart, action$gameLoopStop}
+)(Game);

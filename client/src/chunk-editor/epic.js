@@ -25,7 +25,7 @@ export default [
     ofType('getChunk')
     // , filter(() => selectChunks(state$.value) === null)
     , exhaustMap(action =>
-      ajax.getJSON(`http://localhost:8080/api/chunks/${action.payload}`).pipe(
+      ajax.getJSON(`http://localhost:8080/api/chunks/${action.data}`).pipe(
         map(getChunkSuccess)
       )
       // .map()

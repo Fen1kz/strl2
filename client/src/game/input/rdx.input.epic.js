@@ -15,7 +15,6 @@ const key2command = {
   , [Key.D]: Commands.RIGHT
 };
 
-
 export default [
   // (actions$, state$) => actions$.pipe(ofType('keyDown')
   (actions$, state$) => Rx.fromEvent(document, 'keydown').pipe(

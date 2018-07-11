@@ -4,7 +4,10 @@ import * as op from "rxjs/operators";
 import {ofType} from "redux-observable";
 
 import CONST_GAME from "./rdx.game._";
-import {action$gameLoopStart} from './rdx.game.actions';
+import {action$gameLoopStart
+  , action$loadLevelComplete
+  , action$gameSpawnPlayer
+} from './rdx.game.actions';
 import {selectGame, selectQueueFirst} from './rdx.game.selectors';
 
 const fps = 1;
@@ -20,29 +23,31 @@ const createGameLoopStream = (actions$) => {
   )
 };
 
-const validActionFilter = action => action.valid === void 0;
-const validActionSet = cb => action => action.valid = !!cb();
-
-const isGameStateValid = (state$) => selectGame(state$.value).isValid();
-
 export default [
   (actions$, state$) => actions$.pipe(
-    ofType(CONST_GAME.gameLoopStart)
-    , op.filter(validActionFilter)
-    , op.tap(validActionSet(() => isGameStateValid(state$)))
-    , op.skip()
+    ofType(CONST_GAME.loadGameViewComplete)
+    , op.switchMapTo(import('./level/level-data.sl1'), (_, iv) => iv.default)
+    , op.map(action$loadLevelComplete)
   )
-  , (actions$, state$) => Rx.merge(
-    actions$.pipe(ofType(CONST_GAME.gameLoopStart)
-      , op.tap(console.log)
-      , op.map(a => a.valid))
+  ,
+  (actions$, state$) => actions$.pipe(
+    ofType(CONST_GAME.loadLevelComplete)
+    , op.map(action$gameSpawnPlayer)
+  )
+  // , (actions$, state$) => actions$.pipe(
+  //   ofType(CONST_GAME.gameSpawnPlayer)
+  //   , op.map(action$gameLoopStart)
+  // )
+  ,
+  (actions$, state$) => Rx.merge(
+    actions$.pipe(ofType(CONST_GAME.gameLoopStart), op.mapTo(true))
     , actions$.pipe(ofType(CONST_GAME.gameLoopStop), op.mapTo(false))
   ).pipe(
     op.distinctUntilChanged()
     // , op.tap(console.log)
     , op.filter(_.identity)
     , op.switchMap(_ => createGameLoopStream(actions$))
-    // , op.map(i => ({type: 'interval', payload: i}))
+    // , op.map(i => ({type: 'interval', data: i}))
     // , op.tap(console.log)
     , op.map(_ => selectQueueFirst(state$.value))
     , op.filter(_.identity)

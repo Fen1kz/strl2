@@ -1,6 +1,8 @@
 export default {
   gameLoopStart: 'gameLoopStart'
   , gameLoopStop: 'gameLoopStop'
-  , reactGameMounted: 'reactGameMounted'
+  , loadGameViewComplete: 'loadGameViewComplete'
+  , loadLevelComplete: 'loadLevelComplete'
+  , gameSpawnPlayer: 'gameSpawnPlayer'
   , playerMove: 'playerMove'
 };

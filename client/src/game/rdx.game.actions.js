@@ -8,12 +8,21 @@ export const action$gameLoopStop = () => ({
   type: CONST_GAME.gameLoopStop
 });
 
-
-export const action$reactGameMounted = () => ({
-  type: CONST_GAME.reactGameMounted
+export const action$loadGameViewComplete = () => ({
+  type: CONST_GAME.loadGameViewComplete
 });
+
+export const action$loadLevelComplete = (data) => ({
+  type: CONST_GAME.loadLevelComplete
+  , data
+});
+
+export const action$gameSpawnPlayer = () => ({
+  type: CONST_GAME.gameSpawnPlayer
+});
+
 
 export const action$playerMove = (x, y) => ({
   type: CONST_GAME.playerMove
-  , payload: {x, y}
+  , data: {x, y}
 });
