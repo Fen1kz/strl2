@@ -3,7 +3,7 @@ import * as Rx from 'rxjs';
 import * as op from "rxjs/operators";
 import {ofType} from "redux-observable";
 
-import {makeCommand} from './rdx.input.actions';
+import {action$inputIntent} from './rdx.input.actions';
 
 import {Key} from '../../util/Keyboard';
 import Commands from '../const.commands';
@@ -21,6 +21,6 @@ export default [
     op.map(e => e.which || e.keyCode || 0)
     , op.map(keyCode => key2command[keyCode])
     , op.filter(_.identity)
-    , op.map(makeCommand)
+    , op.map(action$inputIntent)
   )
 ];

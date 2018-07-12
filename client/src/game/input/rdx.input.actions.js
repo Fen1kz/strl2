@@ -1,16 +1,16 @@
-import inputConstants from './rdx.input._';
+import CONST_INPUT from './rdx.input._';
 
-export const keyDown = (keyCode) => ({
-  type: inputConstants.keyDown,
-  data: keyCode
+export const action$inputIntent = (commandName, data) => ({
+  type: CONST_INPUT.inputIntent,
+  data: {commandName, data}
 });
 
-export const keyUp = (keyCode) => ({
-  type: inputConstants.keyUp,
-  data: keyCode
+export const action$inputCommand = (commandName, data) => ({
+  type: CONST_INPUT.inputCommand,
+  data: {commandName, data}
 });
 
-export const makeCommand = (command) => ({
-  type: inputConstants.command$ + command,
-  data: null
+export const action$levelTileClicked = (tileId) => ({
+  type: CONST_INPUT.levelTileClicked
+  , data: {tileId}
 });

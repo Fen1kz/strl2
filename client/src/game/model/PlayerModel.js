@@ -3,7 +3,7 @@ import {Record} from 'immutable';
 import Point from './Point';
 
 export class PlayerModel extends Record({
-  pos: new Point()
+  tileId: void 0
 }) {
 }
 

@@ -5,16 +5,10 @@ import Point from './Point.js';
 import PlayerModel from './PlayerModel.js';
 import CameraModel from './CameraModel.js';
 
-class LevelModel extends Record({
-}) {}
+import TileModel, {TileNextModel} from './TileModel.js';
 
-class TileModel extends Record({
-  id: void 0, pos: new Point(), text: void 0, next: void 0
-}) {}
-
-const TileNextModel = Record({
-  N: void 0, E: void 0, S: void 0, W: void 0
-});
+class LevelModel extends Record({}) {
+}
 
 
 class GameModel extends Record({
@@ -44,14 +38,18 @@ class GameModel extends Record({
       tile.id = id;
     });
 
-    const getTileId = (x, y) => map[x] && map[x][y] && map[x][y].id || null;
+    const getTileId = (x, y) => map[y] && map[y][x] && map[y][x].id || null;
 
     level.forEach((tile, id) => {
       tile.next = new TileNextModel({
-        N:   getTileId(tile.pos.x    , tile.pos.y - 1)
-        , E: getTileId(tile.pos.x + 1, tile.pos.y    )
-        , S: getTileId(tile.pos.x    , tile.pos.y + 1)
-        , W: getTileId(tile.pos.x - 1, tile.pos.y    )
+        N: getTileId(tile.pos.x, tile.pos.y - 1)
+        , E: getTileId(tile.pos.x + 1, tile.pos.y)
+        , S: getTileId(tile.pos.x, tile.pos.y + 1)
+        , W: getTileId(tile.pos.x - 1, tile.pos.y)
+        , NE: getTileId(tile.pos.x + 1, tile.pos.y - 1)
+        , NW: getTileId(tile.pos.x - 1, tile.pos.y - 1)
+        , SE: getTileId(tile.pos.x + 1, tile.pos.y + 1)
+        , SW: getTileId(tile.pos.x - 1, tile.pos.y + 1)
       });
     });
     //

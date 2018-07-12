@@ -21,8 +21,7 @@ export const action$gameSpawnPlayer = () => ({
   type: CONST_GAME.gameSpawnPlayer
 });
 
-
-export const action$playerMove = (x, y) => ({
+export const action$playerMove = (tileId) => ({
   type: CONST_GAME.playerMove
-  , data: {x, y}
+  , data: {tileId}
 });

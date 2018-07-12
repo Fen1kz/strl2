@@ -1,11 +1,23 @@
-.Tile text {
+.Tile .TileText {
     font: 12px monospace;
     text-anchor: middle;
     alignment-baseline: central;
 }
 
+.Tile .TileTextDbg {
+    font: 6px monospace;
+    text-anchor: middle;
+    alignment-baseline: central;
+    fill: #333;
+    visibility: hidden;
+}
+
+.Tile:hover .TileTextDbg {
+    visibility: visible;
+}
+
 .Tile rect {
-    fill: none;
+    fill: #eee;
     stroke-width: 1px;
     stroke: #777;
 }

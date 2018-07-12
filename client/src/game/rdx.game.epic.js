@@ -4,11 +4,14 @@ import * as op from "rxjs/operators";
 import {ofType} from "redux-observable";
 
 import CONST_GAME from "./rdx.game._";
-import {action$gameLoopStart
+import CONST_INPUT from "./input/rdx.input._";
+import {
+  action$gameLoopStart
   , action$loadLevelComplete
-  , action$gameSpawnPlayer
+  , action$gameSpawnPlayer, action$playerMove
 } from './rdx.game.actions';
-import {selectGame, selectQueueFirst} from './rdx.game.selectors';
+import {selectGame, selectQueueFirst, selectPlayer, selectTile} from './rdx.game.selectors';
+import {switchReducer} from "../util/redux.util";
 
 const fps = 1;
 const timeFrameDuration = 1000 / fps;
@@ -52,4 +55,40 @@ export default [
     , op.map(_ => selectQueueFirst(state$.value))
     , op.filter(_.identity)
   )
+  , (actions$, state$) => actions$.pipe(
+    ofType(CONST_INPUT.levelTileClicked)
+    , op.switchMap(action => {
+      const tileId = action.data.tileId;
+      const tile = selectTile(state$.value, tileId);
+      const tileText = tile.text;
+      const player = selectPlayer(state$.value);
+      if (tileText !== '#') {
+        if (tile.isNext(player.tileId)) {
+          return Rx.of(action$playerMove(tileId))
+        }
+      }
+      return Rx.NEVER;
+    })
+  )
 ];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

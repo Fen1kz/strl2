@@ -1,5 +1,5 @@
 export default {
-  keyDown: 'keyDown'
-  , keyUp: 'keyUp'
-  , command$: 'command$'
+  inputIntent: 'inputIntent'
+  , inputCommand: 'inputCommand'
+  , levelTileClicked: 'levelTileClicked'
 };
