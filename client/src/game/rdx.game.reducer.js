@@ -70,4 +70,4 @@ export default createReducer(initialState, {
 // 1: button#1
 // 2: button#1
 // trait button interact click
-// trait 
+// trait

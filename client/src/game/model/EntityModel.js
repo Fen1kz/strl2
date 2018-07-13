@@ -17,6 +17,8 @@ export const ENTITY_ACTION = {
 export const ENTITY_TRAIT = {
   TraitWall: 'TraitWall'
   , TraitDoor: 'TraitDoor'
+  , TraitDoorControllable: 'TraitDoorControllable'
+  , TraitButton: 'TraitButton'
   , TraitBreakable: 'TraitBreakable'
   , TraitPlayerSpawnPoint: 'TraitPlayerSpawnPoint'
   , TraitPlayer: 'TraitPlayer'
@@ -53,7 +55,19 @@ export const EntityTraits = {
     }
     , validators: {
       [ENTITY_ACTION.MOVE]: (entity) => !entity.getStat(ENTITY_STAT.Impassable)
-      , [ENTITY_ACTION.INTERACT]: (entity) => !entity.getStat(ENTITY_STAT.Locked)
+    }
+  })
+  , TraitDoorControllable: EntityTrait.fromJS({
+    name: ENTITY_TRAIT.TraitDoorControllable
+    , init: EntityTraits.TraitDoor.init
+    , validators: {
+      [ENTITY_ACTION.MOVE]: (entity) => !entity.getStat(ENTITY_STAT.Impassable)
+    }
+  })
+  , TraitButton: EntityTrait.fromJS({
+    name: ENTITY_TRAIT.TraitDoor
+    , validators: {
+      [ENTITY_ACTION.INTERACT]: (entity) => !entity.getStat(ENTITY_STAT.Disabled)
     }
     , actions: {
       [ENTITY_ACTION.INTERACT]: (source) => {
