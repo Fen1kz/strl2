@@ -10,3 +10,5 @@ export const LEVEL_HEIGHT = 31;
 export const getTileY = (tileId) => Math.floor(tileId / LEVEL_WIDTH);
 export const getTileX = (tileId) => tileId % LEVEL_HEIGHT;
 export const getTileId = (x, y) => x + y * LEVEL_HEIGHT;
+
+export const translateXY = (point) => `${point.x * CELLSIZE}px, ${point.y * CELLSIZE}px`;

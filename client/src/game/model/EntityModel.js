@@ -19,11 +19,12 @@ export const ENTITY_TRAIT = {
   , TraitDoor: 'TraitDoor'
   , TraitBreakable: 'TraitBreakable'
   , TraitPlayerSpawnPoint: 'TraitPlayerSpawnPoint'
+  , TraitPlayer: 'TraitPlayer'
 };
 
 class EntityTrait extends Record({
   name: null
-  , onInit: _.identity
+  , init: _.identity
   , actions: Map()
   , validators: Map()
 }) {
@@ -31,6 +32,10 @@ class EntityTrait extends Record({
     return new EntityTrait(js)
       .set('actions', Map(js.actions))
       .set('validators', Map(js.validators))
+  }
+  
+  onInit(entity, ...params) {
+    return entity.update(entity => this.init(entity, ...params));
   }
 }
 
@@ -43,7 +48,7 @@ export const EntityTraits = {
   })
   , TraitDoor: EntityTrait.fromJS({
     name: ENTITY_TRAIT.TraitDoor
-    , onInit: (entity) => {
+    , init: (entity) => {
       return entity.setStat(ENTITY_STAT.Impassable, true);
     }
     , validators: {
@@ -59,7 +64,7 @@ export const EntityTraits = {
   })
   , TraitBreakable: EntityTrait.fromJS({
     name: ENTITY_TRAIT.TraitBreakable
-    , onInit: (entity, hp) => {
+    , init: (entity, hp) => {
       return entity.setIn(['stats', ENTITY_STAT.HealthPoints], hp);
     }
     , actions: {
@@ -70,6 +75,9 @@ export const EntityTraits = {
   })
   , TraitPlayerSpawnPoint: EntityTrait.fromJS({
     name: ENTITY_TRAIT.TraitPlayerSpawnPoint
+  })
+  , TraitPlayer: EntityTrait.fromJS({
+    name: ENTITY_TRAIT.TraitPlayer
   })
 };
 
@@ -97,10 +105,17 @@ export default class EntityModel extends Record({
       });
   }
 
-  addTrait(trait) {
+  onValidate(actionName, ...params) {
+    return this.traits.every(trait => {
+      const validator = trait.validators.get(actionName);
+      return !validator || validator(this, ...params);
+    })
+  }
+
+  addTrait(trait, ...params) {
     return this
       .setIn(['traits', trait.name], trait)
-      .update(trait.onInit)
+      .update((entity) => trait.onInit(entity, ...params))
   }
 
   getTrait(traitName) {

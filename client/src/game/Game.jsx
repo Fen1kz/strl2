@@ -1,90 +1,27 @@
 import React from 'react';
 import {connect} from "react-redux";
 
-import {CELLSIZE, CELLSIZE2} from "./const.game";
+import {CELLSIZE, CELLSIZE2, translateXY} from "./const.game";
 
 import {
   action$loadGameViewComplete
   , action$gameLoopStart
   , action$gameLoopStop
 } from "./rdx.game.actions";
+
 import {
-  action$levelTileClicked
+  action$entityClicked
+  , action$tileClicked
 } from "./input/rdx.input.actions";
 
 import {updates$, frames$} from "./rdx.game.epic";
 import {selectGame, selectPlayer, selectLevel, selectTile} from './rdx.game.selectors'
 
-// import Level from './level/Level
 import './game.css';
 import {ENTITY_TRAIT} from "./model/EntityModel";
 
-const Player = (({player}) => (
-    <g className='Player' style={{
-      transform: `translate(${player.x * CELLSIZE}px, ${player.y * CELLSIZE}px)`
-    }}>
-      <circle cx='0' cy='0' r={CELLSIZE / 2}/>
-    </g>
-  )
-);
-
-class Tile extends React.PureComponent {
-  onClick = () => {
-    this.props.onClick(this.props.tile.id);
-  };
-
-  render() {
-    const {tile} = this.props;
-    const x = tile.x * CELLSIZE;
-    const y = tile.y * CELLSIZE;
-    return (<g className='Tile' onClick={this.onClick} style={{
-      transform: `translate(${x}px, ${y}px)`
-    }}>
-      <rect x={-CELLSIZE2} y={-CELLSIZE2} width={CELLSIZE} height={CELLSIZE}/>
-      <text y={CELLSIZE2 / 2} className='TileTextDbg'>{tile.id}</text>
-    </g>);
-  }
-}
-
-class Entity extends React.PureComponent {
-  constructor(props) {
-    super(props);
-    const entity = this.props.entity;
-    if (entity.getTrait(ENTITY_TRAIT.TraitWall)) {
-      this.text = '#';
-    } else if (entity.getTrait(ENTITY_TRAIT.TraitDoor)) {
-      this.text = '+';
-    } else if (entity.getTrait(ENTITY_TRAIT.TraitPlayerSpawnPoint)) {
-      this.text = '@';
-    } else {
-      this.text = null;
-    }
-  }
-
-  onClick = () => {
-    this.props.onClick(this.props.entity.tileId);
-  };
-
-  render() {
-    const {entity} = this.props;
-    const x = entity.x * CELLSIZE;
-    const y = entity.y * CELLSIZE;
-    return (this.text && <g className='Entity' onClick={this.onClick} style={{
-      transform: `translate(${x}px, ${y}px)`
-    }}>
-      <text className='EntityText'>{this.text}</text>
-    </g>);
-  }
-}
-
-const GameQueue = ({start, queue}) => {
-  let position = start;
-  return (<g>
-    {queue.map((command, idx) => {
-      return <rect width={CELLSIZE2} height={CELLSIZE2}/>
-    })}
-  </g>);
-};
+import Entity from './gfx/Entity';
+import Tile from './gfx/Tile';
 
 const isInsideViewport = (camera, point) => (
   point.x >= camera.minX
@@ -106,12 +43,16 @@ export class Game extends React.Component {
     this.props.action$gameLoopStop();
   }
 
-  onTileClick = (tileId) => {
-    this.props.action$levelTileClicked(tileId);
+  onEntityClick = (entity) => {
+    this.props.action$entityClicked(entity.id, entity.tileId);
+  };
+
+  onTileClick = (tile) => {
+    this.props.action$tileClicked(tile.id);
   };
 
   render() {
-    const {game, player, tiles, elist} = this.props;
+    const {game, player, tiles} = this.props;
 
     return (<div>
       <div>
@@ -130,9 +71,9 @@ export class Game extends React.Component {
           )}
         </g>
         <g className='Entities'>
-          {player && <Player player={player}/>}
-          {game.elist && game.elist.valueSeq().map(entity => isInsideViewport(game.camera, entity)
-            ? <Entity key={entity.id} entity={entity} onClick={this.onTileClick}/>
+          {player && <Entity entity={player}/>}
+          {game.emap && game.emap.valueSeq().map(entity => isInsideViewport(game.camera, entity)
+            ? <Entity key={entity.id} entity={entity} onClick={this.onEntityClick}/>
             : null
           )}
         </g>
@@ -157,6 +98,6 @@ export default connect(
   })
   , {
     action$loadGameViewComplete, action$gameLoopStart, action$gameLoopStop
-    , action$levelTileClicked
+    , action$tileClicked, action$entityClicked
   }
 )(Game);

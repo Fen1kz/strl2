@@ -8,11 +8,11 @@ import CONST_INPUT from "./input/rdx.input._";
 import {
   action$gameLoopStart
   , action$loadLevelComplete
-  , action$gameSpawnPlayer, action$playerMove
+  , action$gameSpawnPlayer, action$entityAction
 } from './rdx.game.actions';
 import {selectGame, selectQueueFirst, selectPlayer, selectTile} from './rdx.game.selectors';
 import {switchReducer} from "../util/redux.util";
-import {ENTITY_STAT} from "./model/EntityModel";
+import {ENTITY_ACTION, ENTITY_STAT} from "./model/EntityModel";
 
 const fps = 1;
 const timeFrameDuration = 1000 / fps;
@@ -57,20 +57,36 @@ export default [
     , op.map(_ => selectQueueFirst(state$.value))
     , op.filter(_.identity)
   )
-  , (actions$, state$) => actions$.pipe(
-    ofType(CONST_INPUT.levelTileClicked)
-    , op.switchMap(action => {
+  , (actions$, state$) => Rx.merge(
+    actions$.pipe(ofType(CONST_INPUT.tileClicked))
+    , actions$.pipe(ofType(CONST_INPUT.entityClicked))
+  ).pipe(
+    op.pluck('data')
+    , op.switchMap(({tileId, entityId}) => {
       const game = selectGame(state$.value);
       const player = selectPlayer(state$.value);
 
-      const tileId = action.data.tileId;
       const tile = selectTile(state$.value, tileId);
 
-      const elist = tile.elist.map(eid => game.elist.get('' + eid));
       if (tile.isNext(player.tileId)) {
-        const player = selectPlayer(state$.value);
-        if (!elist.some(entity => entity.getStat(ENTITY_STAT.Impassable))) {
-          return Rx.of(action$playerMove(tileId))
+
+        const elist = entityId
+          ? [game.emap.get('' + entityId)]
+          : tile.elist.map(eid => game.emap.get('' + eid));
+
+        let actions = elist.reduce((entityActionList, entity) => {
+          return entityActionList.concat(entity.traits.reduce((traitActionList, trait) => {
+            return traitActionList.concat(trait.actions.keySeq().toArray());
+          }, []))
+        }, [ENTITY_ACTION.MOVE]);
+        actions = actions
+          .filter(actionName => elist
+            .every(entity => entity.onValidate(actionName)));
+        if (actions.length > 1) {
+          console.log('MULTIPLE ACTIONS:', actions);
+        }
+        if (actions[0]) {
+          return Rx.of(action$entityAction(actions[0], null, tileId))
         }
       }
 

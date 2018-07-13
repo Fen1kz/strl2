@@ -6,7 +6,7 @@ export const createReducer = (initialState, lookupTable) =>
 
 export const switchReducer = (mapper, lookupTable) => (state, actionData) => {
   const key = mapper(state, actionData);
-  return (lookupTable[key]
+  return ((lookupTable[key])
     ? lookupTable[key](state, actionData)
     : state
   )

@@ -1,5 +1,6 @@
 export default {
   inputIntent: 'inputIntent'
   , inputCommand: 'inputCommand'
-  , levelTileClicked: 'levelTileClicked'
+  , tileClicked: 'tileClicked'
+  , entityClicked: 'entityClicked'
 };

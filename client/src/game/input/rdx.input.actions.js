@@ -10,7 +10,12 @@ export const action$inputCommand = (commandName, data) => ({
   data: {commandName, data}
 });
 
-export const action$levelTileClicked = (tileId) => ({
-  type: CONST_INPUT.levelTileClicked
+export const action$entityClicked = (entityId, tileId) => ({
+  type: CONST_INPUT.entityClicked
+  , data: {entityId, tileId}
+});
+
+export const action$tileClicked = (tileId) => ({
+  type: CONST_INPUT.tileClicked
   , data: {tileId}
 });

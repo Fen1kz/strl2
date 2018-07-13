@@ -19,18 +19,24 @@ class GameModel extends Record({
   , running: false
   , player: null
   , tiles: List()
-  , elist: Map()
+  , emap: Map()
   , camera: new CameraModel()
 }) {
   canStart() {
     return !!(this.level && this.player);
   }
 
+  addEntity(entity) {
+    return this
+      .setIn(['emap', entity.id], entity)
+      .setIn(['tiles', entity.tileId, 'elist'], elist => elist.push(entity.id))
+  }
+
   parseLevel(data) {
     let TILE_ID_COUNTER = 0;
     let ENTITY_ID_COUNTER = 0;
     const tiles = [];
-    const elist = {};
+    const emap = {};
     const text2type = {
       '#': [ENTITY_TRAIT.TraitWall]
       , '@': [ENTITY_TRAIT.TraitPlayerSpawnPoint]
@@ -53,7 +59,7 @@ class GameModel extends Record({
             };
 
             tile.elist = [entity.id];
-            elist[entity.id] = EntityModel.fromJS(entity);
+            emap[entity.id] = EntityModel.fromJS(entity);
           }
 
           return tile;
@@ -77,7 +83,7 @@ class GameModel extends Record({
     });
 
     return this.set('tiles', List(tiles).map(tile => TileModel.fromJS(tile)))
-      .set('elist', Map(elist));
+      .set('emap', Map(emap));
   }
 }
 
