@@ -9,6 +9,6 @@ export const selectPlayer = createSelector(selectGame
   , game => game.player);
 
 export const selectLevel = createSelector(selectGame
-  , game => game.level);
+  , game => game.tiles);
 
 export const selectTile = (state, tileId) => selectLevel(state).get(tileId);

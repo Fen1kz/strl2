@@ -1,21 +1,25 @@
 import _ from 'lodash';
-import {Record, List} from 'immutable';
+import {Record, List, Map} from 'immutable';
 
 import Point from './Point.js';
 import PlayerModel from './PlayerModel.js';
 import CameraModel from './CameraModel.js';
 
 import TileModel, {TileNextModel} from './TileModel.js';
+import EntityModel, {ENTITY_TRAIT} from './EntityModel.js';
 
-class LevelModel extends Record({}) {
-}
+import {getTileId, getTileX, getTileY} from "../const.game";
 
+// tile > object
+// entity > tile (entity.tileId)
+// tile xy = tile.xy
 
 class GameModel extends Record({
   queue: List()
   , running: false
   , player: null
-  , level: null
+  , tiles: List()
+  , elist: Map()
   , camera: new CameraModel()
 }) {
   canStart() {
@@ -23,40 +27,57 @@ class GameModel extends Record({
   }
 
   parseLevel(data) {
-    let level = [];
+    let TILE_ID_COUNTER = 0;
+    let ENTITY_ID_COUNTER = 0;
+    const tiles = [];
+    const elist = {};
+    const text2type = {
+      '#': [ENTITY_TRAIT.TraitWall]
+      , '@': [ENTITY_TRAIT.TraitPlayerSpawnPoint]
+      , '+': [ENTITY_TRAIT.TraitDoor]
+    };
 
     const map = data.map.split('\n')
       .filter(row => row.trim())
       .map((row, y) => row.split('')
         .map((text, x) => {
-          const tile = {pos: new Point({x, y}), text};
-          level.push(tile);
+          const tileId = TILE_ID_COUNTER++;
+          const tile = {id: tileId, elist: []};
+          tiles.push(tile);
+
+          if (text2type[text]) {
+            const entity = {
+              id: ENTITY_ID_COUNTER++
+              , tileId
+              , traitsList: text2type[text]
+            };
+
+            tile.elist = [entity.id];
+            elist[entity.id] = EntityModel.fromJS(entity);
+          }
+
           return tile;
         }));
 
-    level.forEach((tile, id) => {
-      tile.id = id;
+    tiles.forEach((tile) => {
+      // @formatter:off
+      const x = getTileX(tile.id);
+      const y = getTileY(tile.id);
+      tile.next = {
+          N : getTileId(x    , y - 1)
+        , E : getTileId(x + 1, y    )
+        , S : getTileId(x    , y + 1)
+        , W : getTileId(x - 1, y    )
+        , NE: getTileId(x + 1, y - 1)
+        , NW: getTileId(x - 1, y - 1)
+        , SE: getTileId(x + 1, y + 1)
+        , SW: getTileId(x - 1, y + 1)
+      };
+      // @formatter:on
     });
 
-    const getTileId = (x, y) => map[y] && map[y][x] && map[y][x].id || null;
-
-    level.forEach((tile, id) => {
-      tile.next = new TileNextModel({
-        N: getTileId(tile.pos.x, tile.pos.y - 1)
-        , E: getTileId(tile.pos.x + 1, tile.pos.y)
-        , S: getTileId(tile.pos.x, tile.pos.y + 1)
-        , W: getTileId(tile.pos.x - 1, tile.pos.y)
-        , NE: getTileId(tile.pos.x + 1, tile.pos.y - 1)
-        , NW: getTileId(tile.pos.x - 1, tile.pos.y - 1)
-        , SE: getTileId(tile.pos.x + 1, tile.pos.y + 1)
-        , SW: getTileId(tile.pos.x - 1, tile.pos.y + 1)
-      });
-    });
-    //
-    // console.log(new TileModel(map[10][10]));
-    // console.log(new Point().setTo({x: 5, y: 5}));
-
-    return this.set('level', List(level).map(tile => new TileModel(tile)));
+    return this.set('tiles', List(tiles).map(tile => TileModel.fromJS(tile)))
+      .set('elist', Map(elist));
   }
 }
 

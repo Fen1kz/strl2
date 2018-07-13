@@ -1,15 +1,18 @@
-.Tile .TileText {
-    font: 12px monospace;
+.Entity .EntityText {
+    font: 24px monospace;
     text-anchor: middle;
     alignment-baseline: central;
+    fill: #999;
+    pointer-events: none;
 }
 
 .Tile .TileTextDbg {
     font: 6px monospace;
     text-anchor: middle;
     alignment-baseline: central;
-    fill: #333;
+    fill: #f00;
     visibility: hidden;
+    pointer-events: none;
 }
 
 .Tile:hover .TileTextDbg {
@@ -19,5 +22,5 @@
 .Tile rect {
     fill: #eee;
     stroke-width: 1px;
-    stroke: #777;
+    stroke: #999;
 }

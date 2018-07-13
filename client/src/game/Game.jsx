@@ -17,36 +17,65 @@ import {selectGame, selectPlayer, selectLevel, selectTile} from './rdx.game.sele
 
 // import Level from './level/Level
 import './game.css';
+import {ENTITY_TRAIT} from "./model/EntityModel";
 
-const Player = connect(
-  state => {
-    const player = selectPlayer(state);
-    return {
-      player
-      , tile: selectTile(state, player.tileId)
-    };
-  }
-)(({player, tile}) => (
+const Player = (({player}) => (
     <g className='Player' style={{
-      transform: `translate(${tile.pos.x * CELLSIZE}px, ${tile.pos.y * CELLSIZE}px)`
+      transform: `translate(${player.x * CELLSIZE}px, ${player.y * CELLSIZE}px)`
     }}>
       <circle cx='0' cy='0' r={CELLSIZE / 2}/>
     </g>
   )
 );
 
-const Tile = ({tile, onClick}) => {
-  const x = tile.pos.x * CELLSIZE;
-  const y = tile.pos.y * CELLSIZE;
+class Tile extends React.PureComponent {
+  onClick = () => {
+    this.props.onClick(this.props.tile.id);
+  };
 
-  return (<g className='Tile' onClick={onClick} style={{
-    transform: `translate(${x}px, ${y}px)`
-  }}>
-    <rect x={-CELLSIZE2} y={-CELLSIZE2} width={CELLSIZE} height={CELLSIZE}/>
-    <text className='TileText'>{tile.text}</text>
-    <text y={CELLSIZE2 / 2} className='TileTextDbg'>{tile.id}</text>
-  </g>)
-};
+  render() {
+    const {tile} = this.props;
+    const x = tile.x * CELLSIZE;
+    const y = tile.y * CELLSIZE;
+    return (<g className='Tile' onClick={this.onClick} style={{
+      transform: `translate(${x}px, ${y}px)`
+    }}>
+      <rect x={-CELLSIZE2} y={-CELLSIZE2} width={CELLSIZE} height={CELLSIZE}/>
+      <text y={CELLSIZE2 / 2} className='TileTextDbg'>{tile.id}</text>
+    </g>);
+  }
+}
+
+class Entity extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    const entity = this.props.entity;
+    if (entity.getTrait(ENTITY_TRAIT.TraitWall)) {
+      this.text = '#';
+    } else if (entity.getTrait(ENTITY_TRAIT.TraitDoor)) {
+      this.text = '+';
+    } else if (entity.getTrait(ENTITY_TRAIT.TraitPlayerSpawnPoint)) {
+      this.text = '@';
+    } else {
+      this.text = null;
+    }
+  }
+
+  onClick = () => {
+    this.props.onClick(this.props.entity.tileId);
+  };
+
+  render() {
+    const {entity} = this.props;
+    const x = entity.x * CELLSIZE;
+    const y = entity.y * CELLSIZE;
+    return (this.text && <g className='Entity' onClick={this.onClick} style={{
+      transform: `translate(${x}px, ${y}px)`
+    }}>
+      <text className='EntityText'>{this.text}</text>
+    </g>);
+  }
+}
 
 const GameQueue = ({start, queue}) => {
   let position = start;
@@ -77,12 +106,12 @@ export class Game extends React.Component {
     this.props.action$gameLoopStop();
   }
 
-  onTileClick = (tileId) => (e) => {
+  onTileClick = (tileId) => {
     this.props.action$levelTileClicked(tileId);
   };
 
   render() {
-    const {game, player, level} = this.props;
+    const {game, player, tiles, elist} = this.props;
 
     return (<div>
       <div>
@@ -95,17 +124,17 @@ export class Game extends React.Component {
         viewBox={game.camera.getViewBox()}
       >
         <g className='Level'>
-          {level && level.map(tile => isInsideViewport(game.camera, tile.pos)
-            ? <Tile key={tile.id} tile={tile} onClick={this.onTileClick(tile.id)}/>
+          {tiles && tiles.map(tile => isInsideViewport(game.camera, tile)
+            ? <Tile key={tile.id} tile={tile} onClick={this.onTileClick}/>
             : null
           )}
         </g>
         <g className='Entities'>
           {player && <Player player={player}/>}
-          <circle cx='-150' cy='-150' r={10}/>
-          <circle cx='150' cy='-150' r={10}/>
-          <circle cx='-150' cy='150' r={10}/>
-          <circle cx='150' cy='150' r={10}/>
+          {game.elist && game.elist.valueSeq().map(entity => isInsideViewport(game.camera, entity)
+            ? <Entity key={entity.id} entity={entity} onClick={this.onTileClick}/>
+            : null
+          )}
         </g>
         <g className='Overlay'>
           {/*{player && <GameQueue start={player.tile.pos} queue={game.queue}/>}*/}
@@ -124,7 +153,7 @@ export default connect(
   state => ({
     game: selectGame(state)
     , player: selectPlayer(state)
-    , level: selectLevel(state)
+    , tiles: selectLevel(state)
   })
   , {
     action$loadGameViewComplete, action$gameLoopStart, action$gameLoopStop

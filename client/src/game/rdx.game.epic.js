@@ -12,6 +12,7 @@ import {
 } from './rdx.game.actions';
 import {selectGame, selectQueueFirst, selectPlayer, selectTile} from './rdx.game.selectors';
 import {switchReducer} from "../util/redux.util";
+import {ENTITY_STAT} from "./model/EntityModel";
 
 const fps = 1;
 const timeFrameDuration = 1000 / fps;
@@ -29,7 +30,8 @@ const createGameLoopStream = (actions$) => {
 export default [
   (actions$, state$) => actions$.pipe(
     ofType(CONST_GAME.loadGameViewComplete)
-    , op.switchMapTo(import('./level/level-data.sl1'), (_, iv) => iv.default)
+    , op.switchMapTo(import('./level/level-data.sl1'))
+    , op.pluck('default')
     , op.map(action$loadLevelComplete)
   )
   ,
@@ -58,15 +60,20 @@ export default [
   , (actions$, state$) => actions$.pipe(
     ofType(CONST_INPUT.levelTileClicked)
     , op.switchMap(action => {
+      const game = selectGame(state$.value);
+      const player = selectPlayer(state$.value);
+
       const tileId = action.data.tileId;
       const tile = selectTile(state$.value, tileId);
-      const tileText = tile.text;
-      const player = selectPlayer(state$.value);
-      if (tileText !== '#') {
-        if (tile.isNext(player.tileId)) {
+
+      const elist = tile.elist.map(eid => game.elist.get('' + eid));
+      if (tile.isNext(player.tileId)) {
+        const player = selectPlayer(state$.value);
+        if (!elist.some(entity => entity.getStat(ENTITY_STAT.Impassable))) {
           return Rx.of(action$playerMove(tileId))
         }
       }
+
       return Rx.NEVER;
     })
   )
