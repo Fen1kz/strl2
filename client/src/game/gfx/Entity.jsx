@@ -2,25 +2,12 @@ import React from "react";
 
 import {translateXY} from "../const.game";
 
-import {ENTITY_STAT, ENTITY_TRAIT} from "../model/EntityModel";
+import {STAT, TRAIT_TYPE} from "../model/EntityModel";
 
 export class Entity extends React.PureComponent {
   constructor(props) {
     super(props);
     const {entity, onClick} = this.props;
-    if (entity.getTrait(ENTITY_TRAIT.TraitWall)) {
-      this.text = '#';
-    } else if (entity.getTrait(ENTITY_TRAIT.TraitDoor)) {
-      if (entity.getStat(ENTITY_STAT.Impassable)) {
-        this.text = '+';
-      } else {
-        this.text = '-';
-      }
-    } else if (entity.getTrait(ENTITY_TRAIT.TraitPlayer)) {
-      this.text = '@';
-    } else {
-      this.text = null;
-    }
 
     if (onClick) {
       this.onClick = () => {
@@ -31,6 +18,21 @@ export class Entity extends React.PureComponent {
 
   render() {
     const {entity} = this.props;
+
+    if (entity.getTrait(TRAIT_TYPE.TraitWall)) {
+      this.text = '#';
+    } else if (entity.getTrait(TRAIT_TYPE.TraitDoor)) {
+      if (entity.getStat(STAT.Impassable)) {
+        this.text = '+';
+      } else {
+        this.text = '-';
+      }
+    } else if (entity.getTrait(TRAIT_TYPE.TraitPlayer)) {
+      this.text = '@';
+    } else {
+      this.text = null;
+    }
+
     return (this.text && <g className='Entity' onClick={this.onClick} style={{
       transform: `translate(${translateXY(entity)})`
     }}>

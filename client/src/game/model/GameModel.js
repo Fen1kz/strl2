@@ -9,6 +9,7 @@ import TileModel, {TileNextModel} from './TileModel.js';
 import EntityModel, {ENTITY_TRAIT} from './EntityModel.js';
 
 import {getTileId, getTileX, getTileY} from "../const.game";
+import {TRAIT_TYPE} from "./EntityModel";
 
 // tile > object
 // entity > tile (entity.tileId)
@@ -17,7 +18,6 @@ import {getTileId, getTileX, getTileY} from "../const.game";
 class GameModel extends Record({
   queue: List()
   , running: false
-  , player: null
   , tiles: List()
   , emap: Map()
   , camera: new CameraModel()
@@ -32,15 +32,31 @@ class GameModel extends Record({
       .setIn(['tiles', entity.tileId, 'elist'], elist => elist.push(entity.id))
   }
 
+  updateEntity(entityId, updateFn) {
+    return this.updateIn(['emap', '' + entityId], updateFn)
+  }
+
+  getEntity(entityId) {
+    return this.getIn(['emap', '' + entityId]);
+  }
+
+  getTile(tileId) {
+    return this.getIn(['tiles', tileId]);
+  }
+
+  getPlayer() {
+    return this.getEntity('@');
+  }
+
   parseLevel(data) {
     let TILE_ID_COUNTER = 0;
     let ENTITY_ID_COUNTER = 0;
     const tiles = [];
     const emap = {};
     const text2type = {
-      '#': [ENTITY_TRAIT.TraitWall]
-      , '@': [ENTITY_TRAIT.TraitPlayerSpawnPoint]
-      , '+': [ENTITY_TRAIT.TraitDoor]
+      '#': [TRAIT_TYPE.TraitWall]
+      , '@': [TRAIT_TYPE.TraitPlayerSpawnPoint]
+      , '+': [TRAIT_TYPE.TraitDoor]
     };
 
     const map = data.map.split('\n')

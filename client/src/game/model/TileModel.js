@@ -14,6 +14,10 @@ export default class TileModel extends Record({
       .set('elist', List(js.elist))
   }
 
+  getEntityList(game) {
+    return this.elist.map(eid => game.getEntity(eid))
+  }
+
   isNext(tileId, strict) {
     return (
       this.next.N === tileId

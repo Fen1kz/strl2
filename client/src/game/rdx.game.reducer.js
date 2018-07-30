@@ -9,7 +9,7 @@ import CONST_COMMAND from './const.commands';
 
 import GameModel from './model/GameModel.js'
 import PlayerModel from './model/PlayerModel.js'
-import {ENTITY_ACTION, ENTITY_TRAIT, EntityTraits} from "./model/EntityModel";
+import {ABILITY, ABILITY_TARGET_TYPE, ENTITY_TRAIT, TRAIT_TYPE} from "./model/EntityModel";
 import EntityModel from "./model/EntityModel";
 
 const initialState = new GameModel();
@@ -24,29 +24,41 @@ export default createReducer(initialState, {
   , [CONST_GAME.loadLevelComplete]: (game, data) => game.parseLevel(data)
   , [CONST_GAME.gameSpawnPlayer]: (game, data) => {
     const spawnPoint = game.emap.find(entity => {
-      return entity.getTrait(ENTITY_TRAIT.TraitPlayerSpawnPoint)
+      return entity.getTrait(TRAIT_TYPE.TraitPlayerSpawnPoint)
     });
     const player = EntityModel.fromJS({
       id: '@'
       , tileId: spawnPoint.tileId
-    }).addTrait(EntityTraits.TraitPlayer);
+    }).addTrait(ENTITY_TRAIT.TraitPlayer);
 
     return game
-      .set('player', player)
+      .setIn(['emap', player.id], player)
       .update('camera', camera => camera.setTo(spawnPoint.tileId))
   }
-  , [CONST_GAME.entityAction]: switchReducer((game, data) => data.actionName
-    , {
-      [ENTITY_ACTION.MOVE]: (game, {actionName, entityId, tileId}) => {
-        return game
-          .setIn(['player', 'tileId'], tileId)
-          .update('camera', camera => camera.setTo(tileId))
-      }
-      , [ENTITY_ACTION.INTERACT]: (game, {actionName, entityId, tileId}) => {
-        return game.updateIn(['emap', entityId], entity)
-      }
+  , [CONST_GAME.entityAbility]: (game, {traitType, abilityId, sourceId, targetId}) => {
+    const et = ENTITY_TRAIT;
+    const ability = ABILITY[abilityId];
+    const source = game.getEntity(sourceId);
+    let target = null;
+    if (ability.targetType === ABILITY_TARGET_TYPE.TILE) {
+      target = game.getTile(targetId);
+    } else if (ability.targetType === ABILITY_TARGET_TYPE.ENTITY) {
+      target = game.getEntity(targetId);
     }
-  )
+    return ability.execute(game, source, target)
+  }
+  // , [CONST_GAME.entityAbility]: switchReducer((game, data) => data.actionName
+  //   , {
+  //     [ABILITY.MOVE]: (game, {actionName, entityId, tileId}) => {
+  //       return game
+  //         .setIn(['player', 'tileId'], tileId)
+  //         .update('camera', camera => camera.setTo(tileId))
+  //     }
+  //     , [ABILITY.INTERACT]: (game, {actionName, entityId, tileId}) => {
+  //       return game.updateIn(['emap', entityId], entity)
+  //     }
+  //   }
+  // )
   // , [CONST_INPUT.inputIntent]: switchReducer((game, data) => data.commandName, {
   //   [CONST_COMMAND.UP]: COMMAND_MOVE(0, -1)
   //   , [CONST_COMMAND.DOWN]: COMMAND_MOVE(0, 1)

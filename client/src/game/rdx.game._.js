@@ -4,5 +4,5 @@ export default {
   , loadGameViewComplete: 'loadGameViewComplete'
   , loadLevelComplete: 'loadLevelComplete'
   , gameSpawnPlayer: 'gameSpawnPlayer'
-  , entityAction: 'entityAction'
+  , entityAbility: 'entityAbility'
 };

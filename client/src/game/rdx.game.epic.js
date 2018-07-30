@@ -8,11 +8,11 @@ import CONST_INPUT from "./input/rdx.input._";
 import {
   action$gameLoopStart
   , action$loadLevelComplete
-  , action$gameSpawnPlayer, action$entityAction
+  , action$gameSpawnPlayer, action$entityAbility
 } from './rdx.game.actions';
 import {selectGame, selectQueueFirst, selectPlayer, selectTile} from './rdx.game.selectors';
 import {switchReducer} from "../util/redux.util";
-import {ENTITY_ACTION, ENTITY_STAT} from "./model/EntityModel";
+import {ABILITY, ABILITY_ID, STAT, ABILITY_TARGET_TYPE} from "./model/EntityModel";
 
 const fps = 1;
 const timeFrameDuration = 1000 / fps;
@@ -64,29 +64,28 @@ export default [
     op.pluck('data')
     , op.switchMap(({tileId, entityId}) => {
       const game = selectGame(state$.value);
-      const player = selectPlayer(state$.value);
+      const player = game.getPlayer();
 
-      const tile = selectTile(state$.value, tileId);
+      const tile = game.getTile(tileId);
 
       if (tile.isNext(player.tileId)) {
+        const elist = tile.getEntityList(game);
 
-        const elist = entityId
-          ? [game.emap.get('' + entityId)]
-          : tile.elist.map(eid => game.emap.get('' + eid));
+        let abils = elist.reduce((entityActionList, entity) => {
+            return entityActionList.concat(
+              entity.getAbilities(game, player, entity).map(abil => [abil, entity.id])
+            );
+          }, player.getAbilities(game, player, tile).map(abil => [abil, tile.id])
+        );
 
-        let actions = elist.reduce((entityActionList, entity) => {
-          return entityActionList.concat(entity.traits.reduce((traitActionList, trait) => {
-            return traitActionList.concat(trait.actions.keySeq().toArray());
-          }, []))
-        }, [ENTITY_ACTION.MOVE]);
-        actions = actions
-          .filter(actionName => elist
-            .every(entity => entity.onValidate(actionName)));
-        if (actions.length > 1) {
-          console.log('MULTIPLE ACTIONS:', actions);
-        }
-        if (actions[0]) {
-          return Rx.of(action$entityAction(actions[0], null, tileId))
+        if (abils[0]) {
+          const [abil, targetId] = abils[0];
+
+          return Rx.of(action$entityAbility(
+            abil.id
+            , player.id
+            , targetId
+          ))
         }
       }
 

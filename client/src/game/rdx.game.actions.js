@@ -21,7 +21,7 @@ export const action$gameSpawnPlayer = () => ({
   type: CONST_GAME.gameSpawnPlayer
 });
 
-export const action$entityAction = (actionName, entityId, tileId) => ({
-  type: CONST_GAME.entityAction
-  , data: {actionName, entityId, tileId}
+export const action$entityAbility = (abilityId, sourceId, targetId) => ({
+  type: CONST_GAME.entityAbility
+  , data: {abilityId, sourceId, targetId}
 });

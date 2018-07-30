@@ -1,20 +1,63 @@
 import _ from "lodash";
-import {Record, Map} from "immutable";
+import {Record, Map, List} from "immutable";
 import {getTileX, getTileY} from "../const.game";
 
-export const ENTITY_STAT = {
+export const STAT = {
   Impassable: 'Impassable'
   , Locked: 'Locked'
   , HealthPoints: 'HealthPoints'
 };
 
-export const ENTITY_ACTION = {
-  INTERACT: 'INTERACT'
-  , ATTACK: 'ATTACK'
-  , MOVE: 'MOVE'
+export const ABILITY_TARGET_TYPE = {
+  TILE: 'TILE'
+  , ENTITY: 'ENTITY'
 };
 
-export const ENTITY_TRAIT = {
+
+export const ABILITY_ID = {
+  MOVE: 'MOVE'
+  , DOOR_OPEN: 'DOOR_OPEN'
+  , DOOR_CLOSE: 'DOOR_CLOSE'
+};
+
+class EntityAbility extends Record({
+  id: null
+  , targetType: null
+  , validate: () => true
+  , execute: null
+}) {
+  static fromJS(js) {
+    return new EntityAbility(js);
+  }
+}
+
+export const ABILITY = {
+  [ABILITY_ID.MOVE]: EntityAbility.fromJS({
+    id: ABILITY_ID.MOVE
+    , targetType: ABILITY_TARGET_TYPE.TILE
+    , validate: (game, source, target) => target.getEntityList(game)
+      .every(entity => !entity.getStat(STAT.Impassable))
+    , execute: (game, source, target) => game
+      .updateEntity(source.id, source => source.set('tileId', target.id))
+      .update('camera', camera => camera.setTo(target.id))
+  })
+  , [ABILITY_ID.DOOR_OPEN]: EntityAbility.fromJS({
+    id: ABILITY_ID.DOOR_OPEN
+    , targetType: ABILITY_TARGET_TYPE.ENTITY
+    , validate: (game, source, target) => target.getStat(STAT.Impassable)
+    , execute: (game, source, target) => game
+      .updateEntity(target.id, target => target.setStat(STAT.Impassable, !target.getStat(STAT.Impassable)))
+  })
+  , [ABILITY_ID.DOOR_CLOSE]: EntityAbility.fromJS({
+    id: ABILITY_ID.DOOR_CLOSE
+    , targetType: ABILITY_TARGET_TYPE.ENTITY
+    , validate: (game, source, target) => !target.getStat(STAT.Impassable)
+    , execute: (game, source, target) => game
+      .updateEntity(target.id, target => target.setStat(STAT.Impassable, !target.getStat(STAT.Impassable)))
+  })
+};
+
+export const TRAIT_TYPE = {
   TraitWall: 'TraitWall'
   , TraitDoor: 'TraitDoor'
   , TraitDoorControllable: 'TraitDoorControllable'
@@ -25,75 +68,60 @@ export const ENTITY_TRAIT = {
 };
 
 class EntityTrait extends Record({
-  name: null
+  type: null
   , init: _.identity
-  , actions: Map()
-  , validators: Map()
+  , abilities: List()
 }) {
   static fromJS(js) {
     return new EntityTrait(js)
-      .set('actions', Map(js.actions))
-      .set('validators', Map(js.validators))
+      .set('abilities', List(js.abilities))
   }
-  
-  onInit(entity, ...params) {
-    return entity.update(entity => this.init(entity, ...params));
+
+  getAbilities(game, source, ...params) {
+    return this.abilities
+      .filter(ability => {
+        console.log(`validating ${ability.id}: ${ability.validate(game, source, ...params)}`);
+        return ability.validate(game, source, ...params)
+      })
+      .toArray()
   }
 }
 
-export const EntityTraits = {
-  TraitWall: EntityTrait.fromJS({
-    name: ENTITY_TRAIT.TraitWall
-    , validators: {
-      [ENTITY_ACTION.MOVE]: () => false
-    }
+export const ENTITY_TRAIT = {
+  [TRAIT_TYPE.TraitWall]: EntityTrait.fromJS({
+    type: TRAIT_TYPE.TraitWall
+    , init: entity => entity.setStat(STAT.Impassable, true)
   })
-  , TraitDoor: EntityTrait.fromJS({
-    name: ENTITY_TRAIT.TraitDoor
-    , init: (entity) => {
-      return entity.setStat(ENTITY_STAT.Impassable, true);
-    }
-    , validators: {
-      [ENTITY_ACTION.MOVE]: (entity) => !entity.getStat(ENTITY_STAT.Impassable)
-    }
-  })
-  , TraitDoorControllable: EntityTrait.fromJS({
-    name: ENTITY_TRAIT.TraitDoorControllable
-    , init: EntityTraits.TraitDoor.init
-    , validators: {
-      [ENTITY_ACTION.MOVE]: (entity) => !entity.getStat(ENTITY_STAT.Impassable)
-    }
-  })
-  , TraitButton: EntityTrait.fromJS({
-    name: ENTITY_TRAIT.TraitDoor
-    , validators: {
-      [ENTITY_ACTION.INTERACT]: (entity) => !entity.getStat(ENTITY_STAT.Disabled)
-    }
-    , actions: {
-      [ENTITY_ACTION.INTERACT]: (source) => {
-        return source
-          .setStat(ENTITY_STAT.Impassable, !source.getStat(ENTITY_STAT.Impassable))
-      }
-    }
-  })
-  , TraitBreakable: EntityTrait.fromJS({
-    name: ENTITY_TRAIT.TraitBreakable
-    , init: (entity, hp) => {
-      return entity.setIn(['stats', ENTITY_STAT.HealthPoints], hp);
-    }
-    , actions: {
-      [ENTITY_ACTION.ATTACK]: (source) => {
-        return source;
-      }
-    }
+  , [TRAIT_TYPE.TraitDoor]: EntityTrait.fromJS({
+    type: TRAIT_TYPE.TraitDoor
+    , init: entity => entity.setStat(STAT.Impassable, true)
+    , abilities: [ABILITY[ABILITY_ID.DOOR_OPEN], ABILITY[ABILITY_ID.DOOR_CLOSE]]
   })
   , TraitPlayerSpawnPoint: EntityTrait.fromJS({
-    name: ENTITY_TRAIT.TraitPlayerSpawnPoint
+    type: TRAIT_TYPE.TraitPlayerSpawnPoint
   })
   , TraitPlayer: EntityTrait.fromJS({
-    name: ENTITY_TRAIT.TraitPlayer
+    type: TRAIT_TYPE.TraitPlayer
+    , abilities: [ABILITY[ABILITY_ID.MOVE]]
   })
 };
+
+
+// EntityAbility.fromJS({
+//   id: 'MOVE'
+//   , type: ABILITY_ID.MOVE
+//   , traitType: TRAIT_TYPE.TraitPlayer
+//   , targetType: ABILITY_TARGET_TYPE.TILE
+//   , validate: (game, source, tile) => {
+//     console.log(game, source, tile);
+//     return tile.getEntityList(game).every(entity => {
+//       return !entity.getStat(STAT.Impassable)
+//     })
+//   }
+//   , execute: (game, source, tile) => game
+//     .updateEntity(source.id, source => source.set('tileId', tile.id))
+//     .update('camera', camera => camera.setTo(tile.id))
+// })
 
 /*
 * Trait Lifecycle
@@ -113,27 +141,26 @@ export default class EntityModel extends Record({
       .update(self => {
         return (js.traitsList || []).reduce((entity, traitString) => {
           const traitName = traitString;
-          const trait = EntityTraits[traitString];
+          const trait = ENTITY_TRAIT[traitString];
           return entity.addTrait(trait);
         }, self)
       });
   }
 
-  onValidate(actionName, ...params) {
-    return this.traits.every(trait => {
-      const validator = trait.validators.get(actionName);
-      return !validator || validator(this, ...params);
-    })
+  getAbilities(game, source, ...params) {
+    return this.traits.reduce((result, trait) => {
+      return result.concat(trait.getAbilities(game, source, ...params));
+    }, [])
   }
 
   addTrait(trait, ...params) {
     return this
-      .setIn(['traits', trait.name], trait)
-      .update((entity) => trait.onInit(entity, ...params))
+      .setIn(['traits', trait.type], trait)
+      .update(entity => trait.init(entity, ...params))
   }
 
-  getTrait(traitName) {
-    return this.traits.get(traitName);
+  getTrait(traitType) {
+    return this.traits.get(traitType);
   }
 
   setStat(statName, value) {
