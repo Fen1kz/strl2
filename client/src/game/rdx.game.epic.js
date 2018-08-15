@@ -12,7 +12,6 @@ import {
 } from './rdx.game.actions';
 import {selectGame, selectQueueFirst, selectPlayer, selectTile} from './rdx.game.selectors';
 import {switchReducer} from "../util/redux.util";
-import {ABILITY, ABILITY_ID, STAT, ABILITY_TARGET_TYPE} from "./model/EntityModel";
 
 const fps = 1;
 const timeFrameDuration = 1000 / fps;
@@ -61,36 +60,43 @@ export default [
     actions$.pipe(ofType(CONST_INPUT.tileClicked))
     , actions$.pipe(ofType(CONST_INPUT.entityClicked))
   ).pipe(
-    op.pluck('data')
-    , op.switchMap(({tileId, entityId}) => {
-      const game = selectGame(state$.value);
-      const player = game.getPlayer();
-
-      const tile = game.getTile(tileId);
-
-      if (tile.isNext(player.tileId)) {
-        const elist = tile.getEntityList(game);
-
-        let abils = elist.reduce((entityActionList, entity) => {
-            return entityActionList.concat(
-              entity.getAbilities(game, player, entity).map(abil => [abil, entity.id])
-            );
-          }, player.getAbilities(game, player, tile).map(abil => [abil, tile.id])
-        );
-
-        if (abils[0]) {
-          const [abil, targetId] = abils[0];
-
-          return Rx.of(action$entityAbility(
-            abil.id
-            , player.id
-            , targetId
-          ))
-        }
-      }
-
-      return Rx.NEVER;
+    op.switchMap((event) => {
+      return state$.value.ecs.onEvent(state$.value, event)
     })
+    // , (actions$, state$) => Rx.merge(
+    //   actions$.pipe(ofType(CONST_INPUT.tileClicked))
+    //   , actions$.pipe(ofType(CONST_INPUT.entityClicked))
+    // ).pipe(
+    //   op.pluck('data')
+    //   , op.switchMap(({tileId, entityId}) => {
+    //     const game = selectGame(state$.value);
+    //     const player = game.getPlayer();
+    //
+    //     const tile = game.getTile(tileId);
+    //
+    //     if (tile.isNext(player.tileId)) {
+    //       const elist = tile.getEntityList(game);
+    //
+    //       let abils = elist.reduce((entityActionList, entity) => {
+    //           return entityActionList.concat(
+    //             entity.getAbilities(game, player, entity).map(abil => [abil, entity.id])
+    //           );
+    //         }, player.getAbilities(game, player, tile).map(abil => [abil, tile.id])
+    //       );
+    //
+    //       if (abils[0]) {
+    //         const [abil, targetId] = abils[0];
+    //
+    //         return Rx.of(action$entityAbility(
+    //           abil.id
+    //           , player.id
+    //           , targetId
+    //         ))
+    //       }
+    //     }
+    //
+    //     return Rx.NEVER;
+    //   })
   )
 ];
 
