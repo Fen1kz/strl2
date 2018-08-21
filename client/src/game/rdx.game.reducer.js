@@ -7,25 +7,22 @@ import CONST_GAME from "./rdx.game._";
 import CONST_INPUT from './input/rdx.input._';
 import CONST_COMMAND from './const.commands';
 
-// import GameModel from './model/GameModel.js'
+import {createDefaultGameModel} from './model/GameModel';
+import {parseLevel} from './model/GameModel.level-parsing';
 // import PlayerModel from './model/PlayerModel.js'
 // import {ABILITY, ABILITY_TARGET_TYPE, ENTITY_TRAIT, TRAIT_TYPE} from "./model/EntityModel";
 // import EntityModel from "./model/EntityModel";
 
-// const initialState = new GameModel();
-const initialState = null;
+const initialState = createDefaultGameModel();
 
 export default createReducer(initialState, {
-  [CONST_GAME.createGame]: (game) => {
-    new ECS
-  }
-  // [CONST_GAME.gameLoopStart]: (game) => game.set('running', true)
+  [CONST_GAME.gameLoopStart]: (game) => game.set('running', true)
   // , [CONST_GAME.gameLoopStop]: (game) => game.set('running', false)
   // // , [CONST_GAME.playerMove]: (game, {x, y}) => game.update('player', player => player
   // //   .update('x', x0 => x0 + x)
   // //   .update('y', y0 => y0 + y)
   // // ).update('queue', queue => queue.skip(1))
-  // , [CONST_GAME.loadLevelComplete]: (game, data) => game.parseLevel(data)
+  , [CONST_GAME.loadLevelComplete]: (game, data) => game.merge(parseLevel(data))
   // , [CONST_GAME.gameSpawnPlayer]: (game, data) => {
   //   const spawnPoint = game.emap.find(entity => {
   //     return entity.getTrait(TRAIT_TYPE.TraitPlayerSpawnPoint)

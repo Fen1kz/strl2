@@ -1,27 +1,21 @@
 import _ from "lodash";
 import {Record, Map, List} from "immutable";
 import {TraitModel, TraitId} from '../TraitModel';
-import {System, SystemId} from '../ECS';
+import {SystemModel, SystemId} from './SystemModel';
 
 import CONST_INPUT from '../../input/rdx.input._';
 
-export const Position = System.fromJS({
+export const Position = SystemModel.fromJS({
   id: SystemId.Position
-  // , eventMap: {
-  //   [CONST_INPUT.tileClicked]: ()
-  //   [CONST_INPUT.entityClicked]: ()
-  // }
+  , data: List()
   , onAttach() {
-
   }
-
   , onEntityAttach(entity) {
     if (entity.traits.has(TraitId.Position)) {
       return this.update('elist', elist => elist.push(entity.id));
     }
     return this;
   }
-
   , onUpdate() {
     console.log('position update')
   }

@@ -1,7 +1,7 @@
 import _ from "lodash";
 import {Record, Map, List} from "immutable";
 import {TraitModel, TraitId} from '../TraitModel';
-import {System, SystemId} from '../ECS';
+import {SystemModel, SystemId} from './SystemModel';
 
 import CONST_INPUT from '../../input/rdx.input._';
 import {action$entityAbility} from "../../rdx.game.actions";
@@ -9,7 +9,7 @@ import {action$entityAbility} from "../../rdx.game.actions";
 import {selectGame} from "../../rdx.game.selectors";
 import * as Rx from "rxjs/index";
 
-export const Player = System.fromJS({
+export const Player = SystemModel.fromJS({
   id: SystemId.Player
   , eventMap: {
     [CONST_INPUT.tileClicked]: (state, {tileId}) => {

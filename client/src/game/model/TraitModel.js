@@ -11,6 +11,10 @@ export class TraitModel extends Record({
 }
 
 export const TraitId = {
-  Position: 'Position'
-  , PlayerControlled: 'PlayerControlled'
+  TraitPosition: 'TraitPosition'
+  , TraitWall: 'TraitWall'
+  , TraitPlayer: 'TraitPlayer'
+  , TraitDoor: 'TraitDoor'
 };
+
+export default TraitModel;
