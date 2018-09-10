@@ -7,8 +7,8 @@ export const Trait = {
     id: TraitId.Position
     , onAttach: (entity, tileId) => entity.setIn(['data', tileId], tileId)
   })
-  , [TraitId.PlayerControlled]: TraitModel.fromJS({
-    id: TraitId.PlayerControlled
+  , [TraitId.TraitPlayer]: TraitModel.fromJS({
+    id: TraitId.TraitPlayer
     // , onAttach: (entity, tileId) => entity.setIn(['data', tileId], tileId)
     ,
   })

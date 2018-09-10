@@ -29,7 +29,7 @@ const createGameLoopStream = (actions$) => {
 export default [
   (actions$, state$) => actions$.pipe(
     ofType(CONST_GAME.loadGameViewComplete)
-    , op.switchMapTo(import('./level/level-data.sl1'))
+    , op.switchMapTo(import('./level/level-data.sl2'))
     , op.pluck('default')
     , op.map(action$loadLevelComplete)
   )

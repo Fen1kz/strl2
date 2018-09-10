@@ -1,20 +1,22 @@
 import _ from 'lodash';
 import {Record, List, Map} from 'immutable';
+import {updateViaReduce} from './Model.utils';
 
 import Point from './Point.js';
 import CameraModel from './CameraModel.js';
 
-// import TileModel, {TileNextModel} from './TileModel.js';
+import TileModel, {TileNextModel} from './TileModel.js';
 import {EntityModel, STAT} from './EntityModel.js';
 import {TraitModel, TraitId} from './TraitModel.js';
 
 import {getTileId, getTileX, getTileY} from "../const.game";
+import {createBlankGameModel} from "./GameModel";
+
 
 export const parseLevel = (data) => {
   let TILE_ID_COUNTER = 0;
-  let ENTITY_ID_COUNTER = 0;
   const tiles = [];
-  const emap = {};
+  let elist = [];
   const text2trait = {
     '#': [TraitId.TraitWall]
     , '@': [TraitId.TraitPlayer]
@@ -28,6 +30,10 @@ export const parseLevel = (data) => {
         const tileId = TILE_ID_COUNTER++;
         const tile = {id: tileId, elist: []};
         tiles.push(tile);
+        if (text2trait[text]) elist.push({
+          xy: [x, y]
+          , traits: text2trait[text]
+        });
         return tile;
       }));
 
@@ -48,7 +54,11 @@ export const parseLevel = (data) => {
     // @formatter:on
   });
 
-  return this
+  const game = createBlankGameModel();
+
+  return game
     .set('tiles', List(tiles).map(tile => TileModel.fromJS(tile)))
-    .set('emap', Map(emap));
+    .update(updateViaReduce(elist, (game, entitySeed) => {
+      game.addEntity(EntityModel.fromSeed(entitySeed))
+    }));
 }

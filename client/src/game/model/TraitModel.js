@@ -15,6 +15,7 @@ export const TraitId = {
   , TraitWall: 'TraitWall'
   , TraitPlayer: 'TraitPlayer'
   , TraitDoor: 'TraitDoor'
+  , TraitAutoDoor: 'TraitAutoDoor'
 };
 
 export default TraitModel;

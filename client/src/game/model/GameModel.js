@@ -58,4 +58,7 @@ export const createDefaultGameModel = () => (new GameModel())
   .addSystem(Position)
   .addSystem(Player);
 
+export const createBlankGameModel = () => (new GameModel())
+  .addSystem(Position);
+
 export default GameModel;

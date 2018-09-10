@@ -1,0 +1,1 @@
+export const updateViaReduce = (list, cb) => (item) => list.reduce(cb, item);
