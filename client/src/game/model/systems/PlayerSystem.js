@@ -13,7 +13,7 @@ export const PlayerSystem = SystemModel.fromJS({
   id: SystemId.Player
   , eventMap: {
     [CONST_INPUT.tileClicked]: (state, {tileId}) => {
-      const game = selectGame(state.value);
+      const game = selectGame(state);
 
       const player = game.getPlayer();
       const tile = game.getTile(tileId);
@@ -58,9 +58,9 @@ export const PlayerSystem = SystemModel.fromJS({
       .update('camera', camera => camera.setTo(player.data.get('tileId')));
   }
 
-  , onEntityAttach(entity) {
-    if (entity.traits.has(TraitId.PlayerControlled)) {
-      return this.update('elist', elist => elist.push(entity.id));
+  , onEntityAttach(game, entity) {
+    if (entity.traits.has(TraitId.TraitPlayer)) {
+      return this.update('data', elist => elist.push(entity.id));
     }
     return this;
   }

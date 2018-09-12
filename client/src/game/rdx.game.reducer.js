@@ -27,6 +27,9 @@ export default createReducer(initialState, {
   , [CONST_GAME.loadLevelComplete]: (game, data) => game
     .merge(parseLevel(data))
     .addSystem(PlayerSystem)
+  // , [CONST_GAME.gameEvent]: (game, data) => {
+  //   game.
+  // }
   // , [CONST_GAME.gameSpawnPlayer]: (game, data) => {
     // const spawnPoint = game.emap.find(entity => {
     //   return entity.getTrait(TraitId.TraitPlayer)

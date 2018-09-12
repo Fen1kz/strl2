@@ -4,7 +4,7 @@ import {TraitModel, TraitId} from './TraitModel';
 import {EntityData} from './EntityModel';
 
 export const TraitData = {
-  [TraitId.Position]: TraitModel.fromJS({
+  [TraitId.TraitPosition]: TraitModel.fromJS({
     id: TraitId.Position
     , onAttach: (entity, tileId) => entity.setIn(['data', EntityData.TileId], tileId)
   })

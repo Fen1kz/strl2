@@ -9,6 +9,7 @@ import {
   action$gameLoopStart
   , action$loadLevelComplete
   , action$gameSpawnPlayer, action$entityAbility
+  , action$gameEvent
 } from './rdx.game.actions';
 import {selectGame, selectQueueFirst, selectPlayer, selectTile} from './rdx.game.selectors';
 import {switchReducer} from "../util/redux.util";
@@ -61,7 +62,11 @@ export default [
     , actions$.pipe(ofType(CONST_INPUT.entityClicked))
   ).pipe(
     op.switchMap((event) => {
-      return state$.value.ecs.onEvent(state$.value, event)
+      const game = selectGame(state$.value);
+      return game.system
+        .valueSeq()
+        .filter(s => !!s && s.eventMap.has(event.type))
+        .map(system => system.eventMap.get(event.type)(state$.value, event.data))
     })
     // , (actions$, state$) => Rx.merge(
     //   actions$.pipe(ofType(CONST_INPUT.tileClicked))

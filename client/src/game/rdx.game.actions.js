@@ -21,6 +21,11 @@ export const action$gameSpawnPlayer = () => ({
   type: CONST_GAME.gameSpawnPlayer
 });
 
+export const action$gameEvent = (event) => ({
+  type: CONST_GAME.gameEvent
+  , data: {eventType: event.type, data: event.data}
+});
+
 export const action$entityAbility = (abilityId, sourceId, targetId) => ({
   type: CONST_GAME.entityAbility
   , data: {abilityId, sourceId, targetId}

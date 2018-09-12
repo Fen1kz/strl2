@@ -10,13 +10,19 @@ export class PositionSystemModel extends Record({
   ...SystemModelProps
   , id: SystemId.Position
 }) {
-  onEntityAttach(game) {
-    console.log('oea')
-    return game;
+  onEntityAttach(game, entity) {
+    const tileId = this.getEntityTileId(entity);
+    return game
+      .updateEntity(entity.id, entity => entity.setIn(['data', 'tileId'], tileId))
+      .updateTile(tileId, tile => tile.update('elist', elist => elist.push(entity.id)));
+  }
+
+  getEntityTileId(entity) {
+    return entity.data.get('tileId');
   }
 
   getEntityXY(entity) {
-    const tileId = entity.data.get('tileId');
+    const tileId = this.getEntityTileId(entity);
     return {
       x: getTileX(entity.data.get('tileId'))
       , y: getTileY(entity.data.get('tileId'))

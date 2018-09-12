@@ -12,10 +12,12 @@ import {updateViaReduce} from "./Model.utils";
 // entity > tile (entity.tileId)
 // tile xy = tile.xy
 
+const SystemRecord = Record(_.mapValues(SystemId, v => null));
+
 class GameModel extends Record({
     running: false
   , entityIdCounter: 0
-  , system: Record(SystemId.map(v => null))
+  , system: new SystemRecord()
   , tiles: List()
   , emap: Map()
   , camera: new CameraModel()
@@ -31,7 +33,7 @@ class GameModel extends Record({
       .set('entityIdCounter', this.entityIdCounter + 1)
       .setIn(['emap', entity.id], entity)
       .update(updateViaReduce(this.system, (game, system) => {
-        return system.onEntityAttach(game, entity);
+        return system ? system.onEntityAttach(game, entity) : game;
       }));
   }
 
@@ -41,20 +43,34 @@ class GameModel extends Record({
       .removeIn(['emap', entityId])
   }
 
-  updateEntity(entityId, updateFn) {
-    return this.updateIn(['emap', entityId], updateFn)
-  }
-
   getEntity(entityId) {
     return this.getIn(['emap', entityId]);
   }
 
+  updateEntity(entityId, updateFn) {
+    return this.updateIn(['emap', entityId], updateFn)
+  }
+
   getTile(tileId) {
-    return this.getIn(['system', SystemId.Position, 'data', tileId]);
+    // return this.getIn(['system', SystemId.Position, 'data', tileId]);
+    return this.getIn(['tiles', tileId]);
+  }
+
+  updateTile(tileId, updateFn) {
+    return this.updateIn(['tiles', tileId], updateFn);
   }
 
   getPlayer() {
     return this.getEntity('@');
+  }
+
+  onEvent(state, event) {
+    return this
+      .set('entityIdCounter', this.entityIdCounter + 1)
+      .setIn(['emap', entity.id], entity)
+      .update(updateViaReduce(this.system, (game, system) => {
+        return system ? system.onEntityAttach(game, entity) : game;
+      }));
   }
 }
 

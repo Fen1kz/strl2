@@ -25,7 +25,7 @@ export class EntityModel extends Record({
     let entity = (new EntityModel());
     if (xy) {
       const tileId = getTileId(xy[0], xy[1]);
-      entity = entity.addTrait(TraitData[TraitId.Position], tileId)
+      entity = entity.addTrait(TraitData[TraitId.TraitPosition], tileId)
     }
     return entity.update(updateViaReduce(traits, (entity, traitId) => {
       const trait = TraitData[traitId];
