@@ -9,7 +9,7 @@ import {action$entityAbility} from "../../rdx.game.actions";
 import {selectGame} from "../../rdx.game.selectors";
 import * as Rx from "rxjs/index";
 
-export const Player = SystemModel.fromJS({
+export const PlayerSystem = SystemModel.fromJS({
   id: SystemId.Player
   , eventMap: {
     [CONST_INPUT.tileClicked]: (state, {tileId}) => {

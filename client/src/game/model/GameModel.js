@@ -4,8 +4,8 @@ import {Record, List, Map} from 'immutable';
 import CameraModel from './CameraModel.js';
 
 import {SystemId} from "./systems/SystemModel";
-import {Position} from "./systems/Position";
-import {Player} from "./systems/Player";
+import {PositionSystem} from "./systems/PositionSystem";
+import {PlayerSystem} from "./systems/PlayerSystem";
 import {updateViaReduce} from "./Model.utils";
 
 // tile > object
@@ -15,7 +15,7 @@ import {updateViaReduce} from "./Model.utils";
 class GameModel extends Record({
     running: false
   , entityIdCounter: 0
-  , system: Map()
+  , system: Record(SystemId.map(v => null))
   , tiles: List()
   , emap: Map()
   , camera: new CameraModel()
@@ -59,10 +59,10 @@ class GameModel extends Record({
 }
 
 export const createDefaultGameModel = () => (new GameModel())
-  .addSystem(Position)
-  .addSystem(Player);
+  .addSystem(PositionSystem)
+  .addSystem(PlayerSystem);
 
 export const createBlankGameModel = () => (new GameModel())
-  .addSystem(Position);
+  .addSystem(PositionSystem);
 
 export default GameModel;

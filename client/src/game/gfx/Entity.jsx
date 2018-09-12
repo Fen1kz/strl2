@@ -41,10 +41,10 @@ export class Entity extends React.PureComponent {
   }
 
   render() {
-    const {entity} = this.props;
+    const {entity, xy} = this.props;
 
     return (<g className='Entity' onClick={this.onClick} style={{
-      transform: `translate(${translateXY(entity.traits.Position.getXY())})`
+      transform: `translate(${translateXY(xy)})`
     }}>
       <EntityText entity={entity}/>
     </g>);

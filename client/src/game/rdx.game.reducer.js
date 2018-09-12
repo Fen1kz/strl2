@@ -9,7 +9,7 @@ import CONST_COMMAND from './const.commands';
 
 import {createBlankGameModel, createDefaultGameModel} from './model/GameModel';
 import {parseLevel} from './model/GameModel.level-parsing';
-import {Player} from './model/systems/Player';
+import {PlayerSystem} from './model/systems/PlayerSystem';
 import {TraitId} from './model/TraitModel';
 // import PlayerModel from './model/PlayerModel.js'
 // import {ABILITY, ABILITY_TARGET_TYPE, ENTITY_TRAIT, TRAIT_TYPE} from "./model/EntityModel";
@@ -26,7 +26,7 @@ export default createReducer(initialState, {
   // // ).update('queue', queue => queue.skip(1))
   , [CONST_GAME.loadLevelComplete]: (game, data) => game
     .merge(parseLevel(data))
-    .addSystem(Player)
+    .addSystem(PlayerSystem)
   // , [CONST_GAME.gameSpawnPlayer]: (game, data) => {
     // const spawnPoint = game.emap.find(entity => {
     //   return entity.getTrait(TraitId.TraitPlayer)

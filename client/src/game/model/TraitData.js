@@ -3,13 +3,10 @@ import {Record, Map, List} from "immutable";
 import {TraitModel, TraitId} from './TraitModel';
 import {EntityData} from './EntityModel';
 
-export const Trait = {
+export const TraitData = {
   [TraitId.Position]: TraitModel.fromJS({
     id: TraitId.Position
     , onAttach: (entity, tileId) => entity.setIn(['data', EntityData.TileId], tileId)
-    , traitData: {
-      getTileId
-    }
   })
   , [TraitId.TraitPlayer]: TraitModel.fromJS({
     id: TraitId.TraitPlayer

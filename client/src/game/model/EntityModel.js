@@ -5,7 +5,7 @@ import {updateViaReduce} from './Model.utils';
 import {getTileId, getTileX, getTileY} from '../const.game';
 
 import {TraitId} from './TraitModel';
-import {Trait} from './Traits';
+import {TraitData} from './TraitData';
 
 export const EntityData = {
   TileId: 'tileId'
@@ -14,8 +14,8 @@ export const EntityData = {
 
 export class EntityModel extends Record({
   id: null
-  , traits: EntityTraits()
   , data: Map()
+  , traits: Map()
 }) {
   static fromJS(js) {
     return new EntityModel(js);
@@ -25,10 +25,10 @@ export class EntityModel extends Record({
     let entity = (new EntityModel());
     if (xy) {
       const tileId = getTileId(xy[0], xy[1]);
-      entity = entity.addTrait(Trait[TraitId.Position], tileId)
+      entity = entity.addTrait(TraitData[TraitId.Position], tileId)
     }
     return entity.update(updateViaReduce(traits, (entity, traitId) => {
-      const trait = Trait[traitId];
+      const trait = TraitData[traitId];
       if (!trait) throw new Error(`No trait[${traitId}]`);
       return entity.addTrait(trait);
     }))
@@ -41,14 +41,6 @@ export class EntityModel extends Record({
 
   hasTrait(traitId) {
     return this.traits.has(traitId);
-  }
-
-  get x () {
-    return getTileX(this.data.get('tileId'));
-  }
-
-  get y () {
-    return getTileY(this.data.get('tileId'));
   }
 }
 
