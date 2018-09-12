@@ -1,5 +1,5 @@
 import _ from "lodash";
-import {Record, Map} from "immutable";
+import {Record, Map, List} from "immutable";
 
 export class SystemModel extends Record({
   id: null

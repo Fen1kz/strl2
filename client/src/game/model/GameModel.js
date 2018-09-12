@@ -6,6 +6,7 @@ import CameraModel from './CameraModel.js';
 import {SystemId} from "./systems/SystemModel";
 import {Position} from "./systems/Position";
 import {Player} from "./systems/Player";
+import {updateViaReduce} from "./Model.utils";
 
 // tile > object
 // entity > tile (entity.tileId)
@@ -20,15 +21,18 @@ class GameModel extends Record({
   , camera: new CameraModel()
 }) {
   addSystem(system) {
-    return this.set('system', system);
+    return this.setIn(['system', system.id], system)
+      .update(game => system.onAttach(game));
   }
 
   addEntity(ientity) {
     const entity = ientity.id ? ientity : ientity.set('id', 'id' + (this.entityIdCounter + 1));
     return this
-      .set('entityIdCounter', entity.id)
+      .set('entityIdCounter', this.entityIdCounter + 1)
       .setIn(['emap', entity.id], entity)
-      .update('system', system => system.map(system => system.onEntityAttach(entity)));
+      .update(updateViaReduce(this.system, (game, system) => {
+        return system.onEntityAttach(game, entity);
+      }));
   }
 
   removeEntity(entityId) {

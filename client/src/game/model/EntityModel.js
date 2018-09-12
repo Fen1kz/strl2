@@ -2,7 +2,7 @@ import _ from "lodash";
 import {Record, Map, List} from "immutable";
 import {updateViaReduce} from './Model.utils';
 
-import {getTileId} from '../const.game';
+import {getTileId, getTileX, getTileY} from '../const.game';
 
 import {TraitId} from './TraitModel';
 import {Trait} from './Traits';
@@ -14,6 +14,7 @@ export const EntityData = {
 
 export class EntityModel extends Record({
   id: null
+  , traits: EntityTraits()
   , data: Map()
 }) {
   static fromJS(js) {
@@ -34,7 +35,20 @@ export class EntityModel extends Record({
   }
 
   addTrait(trait, ...params) {
-    return trait.onAttach(this, ...params);
+    return this.setIn(['traits', trait.id], trait.id)
+      .update(entity => trait.onAttach(entity, ...params));
+  }
+
+  hasTrait(traitId) {
+    return this.traits.has(traitId);
+  }
+
+  get x () {
+    return getTileX(this.data.get('tileId'));
+  }
+
+  get y () {
+    return getTileY(this.data.get('tileId'));
   }
 }
 

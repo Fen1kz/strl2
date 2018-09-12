@@ -7,6 +7,9 @@ export const Trait = {
   [TraitId.Position]: TraitModel.fromJS({
     id: TraitId.Position
     , onAttach: (entity, tileId) => entity.setIn(['data', EntityData.TileId], tileId)
+    , traitData: {
+      getTileId
+    }
   })
   , [TraitId.TraitPlayer]: TraitModel.fromJS({
     id: TraitId.TraitPlayer
@@ -16,5 +19,9 @@ export const Trait = {
   , [TraitId.TraitWall]: TraitModel.fromJS({
     id: TraitId.TraitWall
     , onAttach: (entity, tileId) => entity.setIn(['data', tileId], tileId)
+  })
+  , [TraitId.TraitDoor]: TraitModel.fromJS({
+    id: TraitId.TraitDoor
+    // , onAttach: (entity, tileId) => entity.setIn(['data', tileId], tileId)
   })
 };

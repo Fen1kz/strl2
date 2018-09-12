@@ -7,13 +7,15 @@ import CONST_GAME from "./rdx.game._";
 import CONST_INPUT from './input/rdx.input._';
 import CONST_COMMAND from './const.commands';
 
-import {createDefaultGameModel} from './model/GameModel';
+import {createBlankGameModel, createDefaultGameModel} from './model/GameModel';
 import {parseLevel} from './model/GameModel.level-parsing';
+import {Player} from './model/systems/Player';
+import {TraitId} from './model/TraitModel';
 // import PlayerModel from './model/PlayerModel.js'
 // import {ABILITY, ABILITY_TARGET_TYPE, ENTITY_TRAIT, TRAIT_TYPE} from "./model/EntityModel";
 // import EntityModel from "./model/EntityModel";
 
-const initialState = createDefaultGameModel();
+const initialState = createBlankGameModel();
 
 export default createReducer(initialState, {
   [CONST_GAME.gameLoopStart]: (game) => game.set('running', true)
@@ -22,19 +24,21 @@ export default createReducer(initialState, {
   // //   .update('x', x0 => x0 + x)
   // //   .update('y', y0 => y0 + y)
   // // ).update('queue', queue => queue.skip(1))
-  , [CONST_GAME.loadLevelComplete]: (game, data) => game.merge(parseLevel(data))
+  , [CONST_GAME.loadLevelComplete]: (game, data) => game
+    .merge(parseLevel(data))
+    .addSystem(Player)
   // , [CONST_GAME.gameSpawnPlayer]: (game, data) => {
-  //   const spawnPoint = game.emap.find(entity => {
-  //     return entity.getTrait(TRAIT_TYPE.TraitPlayerSpawnPoint)
-  //   });
-  //   const player = EntityModel.fromJS({
-  //     id: '@'
-  //     , tileId: spawnPoint.tileId
-  //   }).addTrait(ENTITY_TRAIT.TraitPlayer);
-  //
-  //   return game
-  //     .setIn(['emap', player.id], player)
-  //     .update('camera', camera => camera.setTo(spawnPoint.tileId))
+    // const spawnPoint = game.emap.find(entity => {
+    //   return entity.getTrait(TraitId.TraitPlayer)
+    // });
+    // const player = EntityModel.fromJS({
+    //   id: '@'
+    //   , tileId: spawnPoint.tileId
+    // }).addTrait(ENTITY_TRAIT.TraitPlayer);
+
+    // return game
+    //   // .setIn(['emap', player.id], player)
+    //   .update('camera', camera => camera.setTo(spawnPoint.tileId))
   // }
   // , [CONST_GAME.entityAbility]: (game, {traitType, abilityId, sourceId, targetId}) => {
   //   const et = ENTITY_TRAIT;

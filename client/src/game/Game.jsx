@@ -18,7 +18,6 @@ import {updates$, frames$} from "./rdx.game.epic";
 import {selectGame, selectPlayer, selectLevel, selectTile} from './rdx.game.selectors'
 
 import './game.css';
-import {ENTITY_TRAIT} from "./model/EntityModel";
 
 import Entity from './gfx/Entity';
 import Tile from './gfx/Tile';

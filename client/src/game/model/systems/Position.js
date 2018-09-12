@@ -7,13 +7,10 @@ import CONST_INPUT from '../../input/rdx.input._';
 
 export const Position = SystemModel.fromJS({
   id: SystemId.Position
-  , data: List()
-  , onAttach() {
-  }
+  // , onAttach() {
+  // }
   , onEntityAttach(entity) {
-    if (entity.traits.has(TraitId.Position)) {
-      return this.update('elist', elist => elist.push(entity.id));
-    }
+    entity.data.tileId
     return this;
   }
   , onUpdate() {

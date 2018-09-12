@@ -6,7 +6,7 @@ import Point from './Point.js';
 import CameraModel from './CameraModel.js';
 
 import TileModel, {TileNextModel} from './TileModel.js';
-import {EntityModel, EntityData} from './EntityModel.js';
+import {EntityModel} from './EntityModel.js';
 import {TraitModel, TraitId} from './TraitModel.js';
 
 import {getTileId, getTileX, getTileY} from "../const.game";
@@ -25,7 +25,7 @@ export const parseLevel = (data) => {
 
   const map = data.map.split('\n')
     .filter(row => row.trim())
-    .map((row, y) => row.split('')
+    .map((row, y) => row.substr(2).split('')
       .map((text, x) => {
         const tileId = TILE_ID_COUNTER++;
         const tile = {id: tileId, elist: []};
@@ -59,6 +59,6 @@ export const parseLevel = (data) => {
   return game
     .set('tiles', List(tiles).map(tile => TileModel.fromJS(tile)))
     .update(updateViaReduce(elist, (game, entitySeed) => {
-      game.addEntity(EntityModel.fromSeed(entitySeed))
+      return game.addEntity(EntityModel.fromSeed(entitySeed))
     }));
 };

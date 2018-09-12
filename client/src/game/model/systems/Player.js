@@ -52,8 +52,10 @@ export const Player = SystemModel.fromJS({
     }
     // , [CONST_INPUT.entityClicked]: ()
   }
-  , onAttach() {
-
+  , onAttach(game) {
+    const player = game.emap.find(e => e.traits.has(TraitId.TraitPlayer));
+    return game.setIn(['system', this.id, 'data'], player.id)
+      .update('camera', camera => camera.setTo(player.data.get('tileId')));
   }
 
   , onEntityAttach(entity) {
