@@ -115,7 +115,7 @@ export const ENTITY_TRAIT = {
 //   , validate: (game, source, tile) => {
 //     console.log(game, source, tile);
 //     return tile.getEntityList(game).every(entity => {
-//       return !entity.getStat(STAT.Impassable)
+//       return !entity.getStat(EntityData.Impassable)
 //     })
 //   }
 //   , execute: (game, source, tile) => game

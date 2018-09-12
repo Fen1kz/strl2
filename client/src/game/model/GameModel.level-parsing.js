@@ -6,7 +6,7 @@ import Point from './Point.js';
 import CameraModel from './CameraModel.js';
 
 import TileModel, {TileNextModel} from './TileModel.js';
-import {EntityModel, STAT} from './EntityModel.js';
+import {EntityModel, EntityData} from './EntityModel.js';
 import {TraitModel, TraitId} from './TraitModel.js';
 
 import {getTileId, getTileX, getTileY} from "../const.game";
@@ -61,4 +61,4 @@ export const parseLevel = (data) => {
     .update(updateViaReduce(elist, (game, entitySeed) => {
       game.addEntity(EntityModel.fromSeed(entitySeed))
     }));
-}
+};

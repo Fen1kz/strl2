@@ -7,8 +7,9 @@ import {getTileId} from '../const.game';
 import {TraitId} from './TraitModel';
 import {Trait} from './Traits';
 
-export const STAT = {
-  Impassable: 'Impassable'
+export const EntityData = {
+  TileId: 'tileId'
+  // , Passable: 'Passable'
 };
 
 export class EntityModel extends Record({
@@ -26,7 +27,9 @@ export class EntityModel extends Record({
       entity = entity.addTrait(Trait[TraitId.Position], tileId)
     }
     return entity.update(updateViaReduce(traits, (entity, traitId) => {
-      return entity.addTrait(Trait[traitId]);
+      const trait = Trait[traitId];
+      if (!trait) throw new Error(`No trait[${traitId}]`);
+      return entity.addTrait(trait);
     }))
   }
 

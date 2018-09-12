@@ -3,7 +3,7 @@ import React from "react";
 import {translateXY} from "../const.game";
 
 import {TraitId} from "../model/TraitModel";
-import {STAT} from "../model/EntityModel";
+import {EntityData} from "../model/EntityModel";
 
 export class EntityAutoDoor_ extends React.PureComponent {
 
@@ -15,7 +15,7 @@ export const EntityText = ({entity}) => {
   if (entity.getTrait(TraitId.TraitWall)) {
     this.text = '#';
   } else if (entity.getTrait(TraitId.TraitDoor)) {
-    if (entity.getStat(STAT.Impassable)) {
+    if (entity.getStat(EntityData.Impassable)) {
       this.text = '+';
     } else {
       this.text = '-';
