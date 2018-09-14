@@ -1,18 +1,6 @@
 import _ from 'lodash';
 import {Record, List, Map} from 'immutable';
-
-import CameraModel from './CameraModel.js';
-
-import {SystemId} from "./systems/SystemModel";
-import {PositionSystem} from "./systems/PositionSystem";
-import {PlayerSystem} from "./systems/PlayerSystem";
 import {updateViaReduce} from "./Model.utils";
-
-// tile > object
-// entity > tile (entity.tileId)
-// tile xy = tile.xy
-
-const SystemRecord = Record(_.mapValues(SystemId, v => null));
 
 class GameModel extends Record({
     running: false
