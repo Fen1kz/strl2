@@ -7,7 +7,7 @@ import CONST_GAME from "./rdx.game._";
 import CONST_INPUT from './input/rdx.input._';
 import CONST_COMMAND from './const.commands';
 
-import {createBlankGameModel, createDefaultGameModel} from './model/GameModel';
+import {createGameModel} from './model/GameModel';
 import {parseLevel} from './model/GameModel.level-parsing';
 import {PlayerSystem} from './model/systems/PlayerSystem';
 import {TraitId} from './model/TraitModel';
@@ -15,7 +15,7 @@ import {TraitId} from './model/TraitModel';
 // import {ABILITY, ABILITY_TARGET_TYPE, ENTITY_TRAIT, TRAIT_TYPE} from "./model/EntityModel";
 // import EntityModel from "./model/EntityModel";
 
-const initialState = createBlankGameModel();
+const initialState = createGameModel();
 
 export default createReducer(initialState, {
   [CONST_GAME.gameLoopStart]: (game) => game.set('running', true)
