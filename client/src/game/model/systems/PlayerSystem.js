@@ -1,25 +1,28 @@
 import _ from "lodash";
 import {Record, Map, List} from "immutable";
 import {TraitModel, TraitId} from '../TraitModel';
-import {SystemModel, SystemId} from './SystemModel';
+import {SystemModel, SystemId, SystemModelProps} from './SystemModel';
 
 import CONST_INPUT from '../../input/rdx.input._';
 import {action$entityAbility} from "../../rdx.game.actions";
 
 import {selectGame} from "../../rdx.game.selectors";
 import * as Rx from "rxjs/index";
+import {PositionSystemModel} from "./PositionSystem";
 
-export const PlayerSystem = SystemModel.fromJS({
-  id: SystemId.Player
-  , eventMap: {
+
+export class PlayerSystemModel extends Record({
+  ...SystemModelProps
+  , id: SystemId.Player
+  , playerId: null
+  , eventMap: Map({
     [CONST_INPUT.tileClicked]: (state, {tileId}) => {
       const game = selectGame(state);
 
-      const player = game.getPlayer();
+      const player = game.system.Player.getPlayer(game);
       const tile = game.getTile(tileId);
 
       if (tile.isNext(player.tileId)) {
-
         return Rx.of((action$entityAbility(
             'MOVE'
             , player.id
@@ -51,21 +54,28 @@ export const PlayerSystem = SystemModel.fromJS({
 
     }
     // , [CONST_INPUT.entityClicked]: ()
-  }
-  , onAttach(game) {
+  })
+}) {
+  onAttach(game) {
     const player = game.emap.find(e => e.traits.has(TraitId.TraitPlayer));
-    return game.setIn(['system', this.id, 'data'], player.id)
-      .update('camera', camera => camera.setTo(player.data.get('tileId')));
-  }
-
-  , onEntityAttach(game, entity) {
-    if (entity.traits.has(TraitId.TraitPlayer)) {
-      return this.update('data', elist => elist.push(entity.id));
+    if (player) {
+      return game.setIn(['system', this.id, 'data'], player.id)
+        .update('camera', camera => camera.setTo(player.data.get('tileId')));
+    } else {
+      return game;
     }
-    return this;
   }
 
-  , onUpdate() {
-    console.log('position update')
+  onEntityAttach(game, entity) {
+    if (entity.traits.has(TraitId.TraitPlayer)) {
+      return game.updateSystem(this.id, system => system.set('playerId', entity.id));
+    }
+    return game;
   }
-});
+
+  getPlayer(game) {
+    return game.getEntity(this.playerId)
+  }
+}
+
+export const PlayerSystem = new PlayerSystemModel();
