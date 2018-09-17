@@ -44,11 +44,25 @@ export default {
   , entites: [
     {
       xy: [1,4]
-      , traits: ['TraitAutoDoor']
+      , traits: {
+        'AutoDoor': {
+          periodOpen: 1
+          , periodTransition: 2
+          , periodClosed: 1
+          , state: 0
+        }
+      }
     }
     , {
       xy: [2,4]
-      , traits: 'TraitAutoDoor'
+      , traits: {
+        'AutoDoor': {
+          periodOpen: 1
+          , periodTransition: 2
+          , periodClosed: 1
+          , state: 0
+        }
+      }
     }
   ]
 }

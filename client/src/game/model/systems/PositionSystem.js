@@ -7,19 +7,19 @@ import {getTileX, getTileY} from "../../const.game";
 
 export function PositionSystem() {
   return {
-    getEntityTileId(entity) {
-      return entity.data.get('tileId');
+    getEntityTileId(entityId) {
+      return this.getEntity(entityId).data.get('tileId');
     }
-    , getEntityXY(entity) {
-      const tileId = this.getEntityTileId(entity);
+    , getEntityXY(entityId) {
+      const tileId = this.getEntityTileId(entityId);
       return {
-        x: getTileX(entity.data.get('tileId'))
-        , y: getTileY(entity.data.get('tileId'))
+        x: getTileX(tileId)
+        , y: getTileY(tileId)
       }
     }
     , events: {
       onEntityAttach(game, entity) {
-        const tileId = this.getEntityTileId(entity);
+        const tileId = this.getEntityTileId(entity.id);
         return game
           .updateEntity(entity.id, entity => entity.setIn(['data', 'tileId'], tileId))
           .updateTile(tileId, tile => tile.update('elist', elist => elist.push(entity.id)));

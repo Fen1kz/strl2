@@ -5,7 +5,7 @@ import {updateViaReduce} from './Model.utils';
 import {getTileId, getTileX, getTileY} from '../const.game';
 
 import {TraitId} from './TraitModel';
-import {TraitData} from './TraitData';
+import {TraitData} from './traits/TraitData';
 
 export const EntityData = {
   TileId: 'tileId'
@@ -34,13 +34,16 @@ export class EntityModel extends Record({
     }))
   }
 
-  addTrait(trait, ...params) {
-    return this.setIn(['traits', trait.id], trait.id)
-      .update(entity => trait.onAttach(entity, ...params));
+  addTrait(trait, traitData) {
+    return this.setIn(['traits', trait.id], traitData);
   }
 
   hasTrait(traitId) {
     return this.traits.has(traitId);
+  }
+
+  getTrait(traitId) {
+    return this.traits.get(traitId);
   }
 }
 

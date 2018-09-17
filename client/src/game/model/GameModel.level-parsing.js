@@ -7,10 +7,11 @@ import CameraModel from './CameraModel.js';
 
 import TileModel, {TileNextModel} from './TileModel.js';
 import {EntityModel} from './EntityModel.js';
-import {TraitModel, TraitId} from './TraitModel.js';
+import {TraitModel} from './TraitModel.js';
+import TraitId from './traits/TraitId.js';
 
 import {getTileId, getTileX, getTileY} from "../const.game";
-import {createBlankGameModel} from "./GameModel";
+import {createGameModel} from "./GameModel";
 
 
 export const parseLevel = (data) => {
@@ -18,9 +19,17 @@ export const parseLevel = (data) => {
   const tiles = [];
   let elist = [];
   const text2trait = {
-    '#': [TraitId.TraitWall]
-    , '@': [TraitId.TraitPlayer]
-    , '+': [TraitId.TraitDoor]
+    '#': {
+      [TraitId.Impassable]: true
+      , [TraitId.TextGfx]: '#'
+    }
+    , '@': {
+      [TraitId.Impassable]: true
+      , [TraitId.Player]: true
+    }
+    , '+': {
+      [TraitId.Door]: true
+    }
   };
 
   const map = data.map.split('\n')
@@ -54,7 +63,7 @@ export const parseLevel = (data) => {
     // @formatter:on
   });
 
-  const game = createBlankGameModel();
+  const game = createGameModel();
 
   return game
     .set('tiles', List(tiles).map(tile => TileModel.fromJS(tile)))
