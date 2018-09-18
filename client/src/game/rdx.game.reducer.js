@@ -26,7 +26,6 @@ export default createReducer(initialState, {
   // // ).update('queue', queue => queue.skip(1))
   , [CONST_GAME.loadLevelComplete]: (game, data) => game
     .merge(parseLevel(data))
-    .addSystem(PlayerSystem)
   // , [CONST_GAME.gameEvent]: (game, data) => {
   //   game.
   // }

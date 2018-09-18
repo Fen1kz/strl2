@@ -1,6 +1,7 @@
 import _ from "lodash";
 import {Record, Map, List} from "immutable";
-import {TraitModel, TraitId} from '../TraitModel';
+import TraitModel from '../TraitModel';
+import TraitId from '../traits/TraitId';
 
 import CONST_INPUT from '../../input/rdx.input._';
 import {getTileX, getTileY} from "../../const.game";
@@ -8,7 +9,7 @@ import {getTileX, getTileY} from "../../const.game";
 export function PositionSystem() {
   return {
     getEntityTileId(entityId) {
-      return this.getEntity(entityId).data.get('tileId');
+      return this.getEntity(entityId).traits.get(TraitId.Position);
     }
     , getEntityXY(entityId) {
       const tileId = this.getEntityTileId(entityId);
@@ -18,10 +19,9 @@ export function PositionSystem() {
       }
     }
     , events: {
-      onEntityAttach(game, entity) {
+      onEntityAttach(entity) {
         const tileId = this.getEntityTileId(entity.id);
-        return game
-          .updateEntity(entity.id, entity => entity.setIn(['data', 'tileId'], tileId))
+        return this
           .updateTile(tileId, tile => tile.update('elist', elist => elist.push(entity.id)));
       }
     }

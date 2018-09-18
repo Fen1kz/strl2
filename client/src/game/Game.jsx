@@ -72,7 +72,7 @@ export class Game extends React.Component {
         <g className='Entities'>
           {player && <Entity entity={player}/>}
           {game.emap && game.emap.valueSeq().map(entity => {
-              const entityXY = game.system.Position.getEntityXY(entity);
+              const entityXY = game.getEntityXY(entity.id);
               return (isInsideViewport(game.camera, entityXY)
                 ? <Entity key={entity.id}
                           entity={entity}

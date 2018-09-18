@@ -12,34 +12,38 @@ const createTraitData = (traitId, traitData) => (
 );
 
 createTraitData(TraitId.Position, {
-  onAttach: (entity, traitData) => entity.set(TraitId.Position, traitData)
+  onAttach: (entity, traitData) => entity
 });
 
 createTraitData(TraitId.Player, {
   onAttach: (entity) => entity
-    .set(TraitId.Player, true)
     .addTrait(TraitId.Impassable, true)
+    .addTrait(TraitId.TextGfx, '@')
 });
 
 createTraitData(TraitId.Impassable, {
-  onAttach: (entity, traitData) => entity
-    .set(TraitId.Impassable, traitData)
+  // onAttach: (entity, traitData) => entity
 });
 
-createTraitData(TraitId.Impassable, {
-  onAttach: (entity, traitData) => entity
-    .set(TraitId.Impassable, traitData)
+createTraitData(TraitId.Interactive, {
+  // onAttach: (entity, traitData) => entity
 });
 
 createTraitData(TraitId.TextGfx, {
   onAttach: (entity, traitData) => entity
-    .set(TraitId.TextGfx, traitData)
 });
 
 createTraitData(TraitId.Door, {
   onAttach: (entity, traitData) => entity
     .addTrait(TraitId.Impassable, traitData)
     .addTrait(TraitId.TextGfx, traitData ? '+' : '-')
+    .addTrait(TraitId.Interactive, {})
+});
+
+createTraitData(TraitId.AutoDoor, {
+  onAttach: (entity, traitData) => entity
+    .addTrait(TraitId.Impassable, traitData)
+    .addTrait(TraitId.TextGfx, traitData ? ']' : '[')
     .addTrait(TraitId.Interactive, {})
 });
 

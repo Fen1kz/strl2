@@ -4,17 +4,11 @@ import {updateViaReduce} from './Model.utils';
 
 import {getTileId, getTileX, getTileY} from '../const.game';
 
-import {TraitId} from './TraitModel';
-import {TraitData} from './traits/TraitData';
-
-export const EntityData = {
-  TileId: 'tileId'
-  // , Passable: 'Passable'
-};
+import TraitId from './traits/TraitId';
+import TraitData from './traits/TraitData';
 
 export class EntityModel extends Record({
   id: null
-  , data: Map()
   , traits: Map()
 }) {
   static fromJS(js) {
@@ -25,17 +19,18 @@ export class EntityModel extends Record({
     let entity = (new EntityModel());
     if (xy) {
       const tileId = getTileId(xy[0], xy[1]);
-      entity = entity.addTrait(TraitData[TraitId.TraitPosition], tileId)
+      entity = entity.addTrait(TraitId.Position, tileId)
     }
-    return entity.update(updateViaReduce(traits, (entity, traitId) => {
-      const trait = TraitData[traitId];
-      if (!trait) throw new Error(`No trait[${traitId}]`);
-      return entity.addTrait(trait);
+    return entity.update(updateViaReduce(traits, (entity, traitData, traitId) => {
+      return entity.addTrait(traitId, traitData);
     }))
   }
 
-  addTrait(trait, traitData) {
-    return this.setIn(['traits', trait.id], traitData);
+  addTrait(traitId, traitData) {
+    const trait = TraitData[traitId];
+    if (!trait) throw new Error(`No trait[${traitId}]`);
+    return this.setIn(['traits', traitId], traitData)
+      .update(self => trait.onAttach(self, traitData));
   }
 
   hasTrait(traitId) {

@@ -3,9 +3,11 @@ import {Record, List, Map, fromJS} from 'immutable';
 
 import {selectGame} from "../../rdx.game.selectors";
 import * as Rx from "rxjs/index";
+import * as op from "rxjs/operators";
 import CameraModel from "../CameraModel";
 
-import {TraitModel, TraitId} from '../TraitModel';
+import {TraitModel} from '../TraitModel';
+import TraitId from '../traits/TraitId';
 import CONST_INPUT from '../../input/rdx.input._';
 import {action$entityAbility} from "../../rdx.game.actions";
 
@@ -14,47 +16,34 @@ export function PlayerSystem() {
   return {
     camera: new CameraModel()
     , playerId: null
-    , getPlayer(game) {
-      return game.getEntity(this.playerId)
+    , getPlayer() {
+      return this.getEntity(this.playerId)
     }
     , events: {
       onEntityAttach(entity) {
-        if (entity.traits.has(TraitId.TraitPlayer)) {
+        if (entity.traits.has(TraitId.Player)) {
           const player = entity;
           return this
             .set('playerId', player.id)
             .update('camera', camera =>
-              camera.setTo(player.data.get('tileId')))
+              camera.setTo(this.getEntityTileId(player.id)))
         } else {
           return this;
         }
       }
-      , [CONST_INPUT.tileClicked]: (state, {tileId}) => {
+    }
+    , rxEvents: {
+      [CONST_INPUT.tileClicked]: (state, {tileId}) => {
         const game = selectGame(state);
-
         const player = game.getPlayer(game);
-        const playerTile = game.getEntityTileId(player);
+        const playerTile = game.getEntityTileId(player.id);
         const tile = game.getTile(tileId);
-        /*
-
-        entity.Position.getTileId()
-        entity.Health.getHealth()
-        entity.Attack
-
-
-
-
-
-        * */
-
-        if (game.getEntityTileId(player))
-        if (tile.isNext(player.tileId)) {
-          return Rx.of((action$entityAbility(
+        if (tile.isNext(playerTile)) {
+          return Rx.of(action$entityAbility(
             'MOVE'
             , player.id
             , tileId
-            ))
-          )
+          ));
         } else {
           return Rx.NEVER;
         }

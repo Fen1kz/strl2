@@ -63,10 +63,10 @@ export default [
   ).pipe(
     op.switchMap((event) => {
       const game = selectGame(state$.value);
-      return game.system
-        .valueSeq()
-        .filter(s => !!s && s.eventMap.has(event.type))
-        .map(system => system.eventMap.get(event.type)(state$.value, event.data))
+      if (!game.rxEventHandlers.has(event.type)) {
+        return Rx.NEVER;
+      }
+      return game.onRxEvent(event.type, state$.value, event.data);
     })
     // , (actions$, state$) => Rx.merge(
     //   actions$.pipe(ofType(CONST_INPUT.tileClicked))

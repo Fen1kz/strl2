@@ -1,8 +1,8 @@
-import {Map} from "immutable";
+import {List} from "immutable";
 
 export function LevelSystem() {
   return {
-    tiles: Map()
+    tiles: List()
     , getTile(tileId) {
       return this.getIn(['tiles', tileId]);
     }
