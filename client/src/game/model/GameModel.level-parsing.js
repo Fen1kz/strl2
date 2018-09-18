@@ -17,7 +17,7 @@ import {createGameModel} from "./GameModel";
 export const parseLevel = (data) => {
   let TILE_ID_COUNTER = 0;
   const tiles = [];
-  let elist = [];
+  let elist = data.entites || [];
   const text2trait = {
     '#': {
       [TraitId.Impassable]: true

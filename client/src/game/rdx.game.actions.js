@@ -26,7 +26,7 @@ export const action$gameEvent = (event) => ({
   , data: {eventType: event.type, data: event.data}
 });
 
-export const action$entityAbility = (abilityId, sourceId, targetId) => ({
-  type: CONST_GAME.entityAbility
-  , data: {abilityId, sourceId, targetId}
+export const action$entityCommand = (command) => ({
+  type: CONST_GAME.entityCommand
+  , data: {command}
 });

@@ -5,5 +5,5 @@ export default {
   , loadLevelComplete: 'loadLevelComplete'
   , gameSpawnPlayer: 'gameSpawnPlayer'
   , gameEvent: 'gameEvent'
-  , entityAbility: 'entityAbility'
+  , entityCommand: 'entityCommand'
 };

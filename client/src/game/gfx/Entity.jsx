@@ -34,7 +34,7 @@ export class Entity extends React.PureComponent {
   render() {
     const {entity, xy} = this.props;
 
-    return (<g className='Entity' onClick={this.onClick} style={{
+    return (<g className={'Entity ' + entity.traits.keySeq().join(' ')} onClick={this.onClick} style={{
       transform: `translate(${translateXY(xy)})`
     }}>
       <EntityText entity={entity}/>

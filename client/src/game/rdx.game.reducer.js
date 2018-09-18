@@ -18,7 +18,7 @@ import {TraitId} from './model/TraitModel';
 const initialState = createGameModel();
 
 export default createReducer(initialState, {
-  [CONST_GAME.gameLoopStart]: (game) => game.set('running', true)
+  [CONST_GAME.gameLoopStart]: (game) => game.onEvent(CONST_GAME.gameLoopStart)
   // , [CONST_GAME.gameLoopStop]: (game) => game.set('running', false)
   // // , [CONST_GAME.playerMove]: (game, {x, y}) => game.update('player', player => player
   // //   .update('x', x0 => x0 + x)
@@ -42,7 +42,8 @@ export default createReducer(initialState, {
     //   // .setIn(['emap', player.id], player)
     //   .update('camera', camera => camera.setTo(spawnPoint.tileId))
   // }
-  // , [CONST_GAME.entityAbility]: (game, {traitType, abilityId, sourceId, targetId}) => {
+  , [CONST_GAME.entityCommand]: (game, data) => game.onEvent(CONST_GAME.entityCommand, data)
+  // , [CONST_GAME.entityCommand]: (game, {traitType, abilityId, sourceId, targetId}) => {
   //   const et = ENTITY_TRAIT;
   //   const ability = ABILITY[abilityId];
   //   const source = game.getEntity(sourceId);
@@ -54,7 +55,7 @@ export default createReducer(initialState, {
   //   }
   //   return ability.execute(game, source, target)
   // }
-  // // , [CONST_GAME.entityAbility]: switchReducer((game, data) => data.actionName
+  // // , [CONST_GAME.entityCommand]: switchReducer((game, data) => data.actionName
   // //   , {
   // //     [ABILITY.MOVE]: (game, {actionName, entityId, tileId}) => {
   // //       return game
