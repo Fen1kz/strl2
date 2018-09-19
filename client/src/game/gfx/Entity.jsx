@@ -3,6 +3,7 @@ import React from "react";
 import {translateXY} from "../const.game";
 
 import TraitId from "../model/traits/TraitId";
+import TraitData from "../model/traits/TraitData";
 
 export class EntityAutoDoor_ extends React.PureComponent {
 
@@ -13,6 +14,9 @@ export class EntityAutoDoor_ extends React.PureComponent {
 export const EntityText = ({entity}) => {
   if (entity.hasTrait(TraitId.TextGfx)) {
     this.text = entity.getTrait(TraitId.TextGfx);
+  } else if (entity.hasTrait(TraitId.GfxRequestText)) {
+    const requestTraitId = entity.getTrait(TraitId.GfxRequestText);
+    this.text = TraitData[requestTraitId].getGfx(entity);
   } else {
     this.text = '?';
   }

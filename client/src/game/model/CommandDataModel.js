@@ -3,9 +3,8 @@ import {Record, Map, List} from "immutable";
 
 export class CommandDataModel extends Record({
   id: null
-  , commandObject() {
-
-  }
+  , getCommand: null
+  , effect: null
 }) {
   static fromJS(js) {
     return new CommandDataModel(js);

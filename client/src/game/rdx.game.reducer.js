@@ -11,6 +11,8 @@ import {createGameModel} from './model/GameModel';
 import {parseLevel} from './model/GameModel.level-parsing';
 import {PlayerSystem} from './model/systems/PlayerSystem';
 import TraitId from './model/traits/TraitId';
+import {action$gameLoopExecute} from "./rdx.game.actions";
+import CommandData from "./model/commands/CommandData";
 // import PlayerModel from './model/PlayerModel.js'
 // import {ABILITY, ABILITY_TARGET_TYPE, ENTITY_TRAIT, TRAIT_TYPE} from "./model/EntityModel";
 // import EntityModel from "./model/EntityModel";
@@ -18,8 +20,10 @@ import TraitId from './model/traits/TraitId';
 const initialState = createGameModel();
 
 export default createReducer(initialState, {
-  [CONST_GAME.gameLoopStart]: (game) => game.onEvent(CONST_GAME.gameLoopStart)
-  , [CONST_GAME.gameLoopContinue]: (game) => game.onEvent(CONST_GAME.gameLoopContinue)
+  [CONST_GAME.gameLoopStart]: (game, data) => game.onEvent(CONST_GAME.gameLoopStart, data)
+  , [CONST_GAME.gameLoopContinue]: (game, data) => game.onEvent(CONST_GAME.gameLoopContinue, data)
+  , [CONST_GAME.gameLoopWaitPlayer]: (game, data) => game.onEvent(CONST_GAME.gameLoopWaitPlayer, data)
+  , [CONST_GAME.gameLoopExecute]: (game, data) => game.onEvent(CONST_GAME.gameLoopExecute, data)
   // , [CONST_GAME.gameLoopStop]: (game) => game.set('running', false)
   // // , [CONST_GAME.playerMove]: (game, {x, y}) => game.update('player', player => player
   // //   .update('x', x0 => x0 + x)
@@ -31,19 +35,28 @@ export default createReducer(initialState, {
   //   game.
   // }
   // , [CONST_GAME.gameSpawnPlayer]: (game, data) => {
-    // const spawnPoint = game.emap.find(entity => {
-    //   return entity.getTrait(TraitId.TraitPlayer)
-    // });
-    // const player = EntityModel.fromJS({
-    //   id: '@'
-    //   , tileId: spawnPoint.tileId
-    // }).addTrait(ENTITY_TRAIT.TraitPlayer);
+  // const spawnPoint = game.emap.find(entity => {
+  //   return entity.getTrait(TraitId.TraitPlayer)
+  // });
+  // const player = EntityModel.fromJS({
+  //   id: '@'
+  //   , tileId: spawnPoint.tileId
+  // }).addTrait(ENTITY_TRAIT.TraitPlayer);
 
-    // return game
-    //   // .setIn(['emap', player.id], player)
-    //   .update('camera', camera => camera.setTo(spawnPoint.tileId))
+  // return game
+  //   // .setIn(['emap', player.id], player)
+  //   .update('camera', camera => camera.setTo(spawnPoint.tileId))
   // }
-  , [CONST_GAME.entityCommand]: (game, data) => game.onEvent(CONST_GAME.entityCommand, data)
+  , [CONST_GAME.playerCommand]: (game, data) => game.onEvent(CONST_GAME.playerCommand, data)
+  , [CONST_GAME.entityCommand]: (game, {command}) => {
+    const commandData = CommandData[command.id];
+    const commandResult = commandData.effect(game, command);
+    if (commandResult === false) {
+      return game;
+    }
+    return commandResult
+      .updateEntity(command.sourceId, entity => entity.updateIn(['traits', TraitId.Energy], energy => energy - command.cost))
+  }
   // , [CONST_GAME.entityCommand]: (game, {traitType, abilityId, sourceId, targetId}) => {
   //   const et = ENTITY_TRAIT;
   //   const ability = ABILITY[abilityId];

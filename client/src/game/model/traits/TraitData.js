@@ -2,6 +2,8 @@ import _ from "lodash";
 import {Record, Map, List} from "immutable";
 import TraitId from './TraitId'
 import TraitModel from '../TraitModel';
+import CommandData from "../commands/CommandData";
+import CommandId from "../commands/CommandId";
 
 const TraitData = {};
 
@@ -38,7 +40,9 @@ createTraitData(TraitId.Energy, {
 });
 
 createTraitData(TraitId.TextGfx, {
-  onAttach: (entity, traitData) => entity
+});
+
+createTraitData(TraitId.GfxRequestText, {
 });
 
 createTraitData(TraitId.Door, {
@@ -63,24 +67,26 @@ createTraitData(TraitId.AutoDoor, {
       gfx = '|';
     }
     return entity
-      .addTrait(TraitId.Impassable, closed)
+      .addTrait(TraitId.Impassable, traitData.get('closed'))
       .addTrait(TraitId.Energy, 0)
-      .addTrait(TraitId.TextGfx, gfx)
+      .addTrait(TraitId.GfxRequestText, TraitId.AutoDoor)
+  }
+  , getGfx(entity) {
+    const traitAutoDoor = entity.getTrait(TraitId.AutoDoor);
+    const traitImpassable = entity.getTrait(TraitId.Impassable);
+    if (traitImpassable) {
+      return traitAutoDoor.get('orientation') === 0 ? ']' : '[';
+    } else {
+      return '|';
+    }
   }
   , getAction(game, entity) {
-    const trait = entity.getIn(['traits', TraitId.AutoDoor]);
-    if (trait.get('closed')) {
-      return {
-        type: 'OPEN'
-        , cost: trait.get('toOpen')
-        , sourceId: entity.id
-      }
+    const traitAutoDoor = entity.getTrait(TraitId.AutoDoor);
+    const traitImpassable = entity.getTrait(TraitId.Impassable);
+    if (traitImpassable) {
+      return CommandData[CommandId.OPEN].getCommand(entity.id, traitAutoDoor.get('toOpen'))
     } else {
-      return {
-        type: 'CLOSE'
-        , cost: trait.get('toClose')
-        , sourceId: entity.id
-      }
+      return CommandData[CommandId.CLOSE].getCommand(entity.id, traitAutoDoor.get('toClose'))
     }
   }
 });

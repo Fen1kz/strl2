@@ -3,6 +3,7 @@ export default {
   , Impassable: 'TraitImpassable'
   , Player: 'Player'
   , TextGfx: 'TextGfx'
+  , GfxRequestText: 'GfxRequestText'
   , Energy: 'Energy'
   , Door: 'Door'
   , AutoDoor: 'AutoDoor'

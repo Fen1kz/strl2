@@ -10,7 +10,9 @@ import TraitModel from '../TraitModel';
 import TraitId from '../traits/TraitId';
 
 import {selectGame} from "../../rdx.game.selectors";
-import {action$entityCommand} from "../../rdx.game.actions";
+import {action$entityCommand, action$playerCommand} from "../../rdx.game.actions";
+import CommandData from "../commands/CommandData";
+import CommandId from "../commands/CommandId";
 
 
 export function PlayerSystem() {
@@ -32,6 +34,10 @@ export function PlayerSystem() {
           return this;
         }
       }
+      , onPlayerMove() {
+        return this
+          .update('camera', camera => camera.setTo(this.getEntityTileId(this.playerId)))
+      }
     }
     , rxEvents: {
       [CONST_INPUT.tileClicked] (state, {tileId}) {
@@ -40,12 +46,8 @@ export function PlayerSystem() {
         const playerTile = game.getEntityTileId(player.id);
         const tile = game.getTile(tileId);
         if (tile.isNext(playerTile)) {
-          const command = {
-            type: 'MOVE'
-            , sourceId: player.id
-            , targetId: tileId
-          };
-          return Rx.of(action$entityCommand(command));
+          const command = CommandData[CommandId.MOVE].getCommand(player.id, tileId);
+          return Rx.of(action$playerCommand(command));
         } else {
           return Rx.NEVER;
         }

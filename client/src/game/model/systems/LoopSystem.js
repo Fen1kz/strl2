@@ -8,19 +8,24 @@ import CONST_GAME from '../../rdx.game._';
 import TraitId from "../traits/TraitId";
 import {updateViaReduce} from "../Model.utils";
 import {selectGame} from "../../rdx.game.selectors";
-import {action$gameLoopContinue} from "../../rdx.game.actions";
+import {
+  action$gameLoopContinue
+  , action$gameLoopWaitPlayer
+  , action$gameLoopExecute, action$entityCommand
+} from "../../rdx.game.actions";
 
 export function LoopSystem() {
   return {
     running: false
+    , waitingPlayer: false
+    , waitingActions: List()
     , queue: List()
     , actors: List()
     , getEntityEnergy(entityId) {
       return this.getEntity(entityId).traits.get(TraitId.Energy);
     }
     , events: {
-      [CONST_GAME.entityCommand]({command}) {
-        console.log('Command', command);
+      [CONST_GAME.playerCommand]({command}) {
         return this.update('queue', queue => queue.push(command));
       }
       , onEntityAttach(entity) {
@@ -31,51 +36,73 @@ export function LoopSystem() {
         return this;
       }
       , [CONST_GAME.gameLoopStart]() {
-        console.log('event gameLoopStart');
         return this.set('running', true);
       }
       , [CONST_GAME.gameLoopContinue]() {
-        return this.update(updateViaReduce(this.actors, (...args) => {
-          console.log(...args)
-          const [game, actorId] = args;
+        return this.update(updateViaReduce(this.actors, (game, actorId) => {
           return game.updateEntity(actorId, (actor) => {
             return actor.updateIn(['traits', TraitId.Energy], energy => energy + 5);
           })
         }));
       }
+      , [CONST_GAME.gameLoopWaitPlayer](actions) {
+        return this
+          .set('waitingPlayer', true)
+          .set('waitingActions', List(actions));
+      }
+      , [CONST_GAME.gameLoopExecute](actions) {
+        return this
+          .set('waitingPlayer', false)
+          .set('waitingActions', List())
+          .update('queue', queue => queue.skip(1));
+      }
     }
     , rxEvents: {
       [CONST_GAME.gameLoopStart](state) {
-        console.log('rxEvent gameLoopStart');
         return Rx.of(action$gameLoopContinue());
       }
       , [CONST_GAME.gameLoopContinue](state) {
-        const game = selectGame(state);
-        const actions = game.actors.map(entityId => {
-          if (game.getEntityEnergy(entityId) <= 0) return [];
-          const entity = game.getEntity(entityId);
-          const entityActions = entity
+        let actions = this.actors.map(entityId => {
+          if (this.getEntityEnergy(entityId) <= 0) return [];
+          const entity = this.getEntity(entityId);
+          return entity
             .getActionHandlers
-            .map(handler => handler(game, entity))
+            .map(handler => handler(this, entity))
             .filter(a => !!a)
             .toArray();
-          return entityActions;
-
-          // return Rx.of(entity
-          //   .getActionHandlers
-          //   .map(handler => handler(game, entity))
-          //   .filter(a => !!a)
-          // )
         })
           .filter(actionArray => actionArray.length !== 0)
           .toArray();
-        console.log(actions);
         if (actions.length === 0) {
-          return Rx.of(action$gameLoopContinue())
-            .pipe(op.delay(1000));
+          return Rx.of(action$gameLoopContinue());
+        } else {
+          actions = actions.reduce((res, next) => res.concat(next));
+          const playerInputNeeded = _.remove(actions, action => action === true).length > 0;
+          if (playerInputNeeded) {
+            if (this.queue.isEmpty()) {
+              return Rx.of(action$gameLoopWaitPlayer(actions));
+            } else {
+              actions.push(this.queue.first());
+            }
+          }
+          return Rx.of(action$gameLoopExecute(actions));
+        }
+      }
+      // , [CONST_GAME.gameLoopWaitPlayer](state) {
+      //   return Rx.NEVER;
+      // }
+      , [CONST_GAME.playerCommand](state, {command}) {
+        if (this.waitingPlayer) {
+          return Rx.of(action$gameLoopExecute(this.waitingActions.push(command).toArray()));
         } else {
           return Rx.NEVER;
         }
+      }
+      , [CONST_GAME.gameLoopExecute](state, actions) {
+        return Rx.concat(
+          Rx.from(actions.map(action => action$entityCommand(action)))
+          , Rx.of(action$gameLoopContinue())
+        );
       }
     }
   }

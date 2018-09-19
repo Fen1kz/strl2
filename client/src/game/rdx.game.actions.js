@@ -8,6 +8,16 @@ export const action$gameLoopContinue = () => ({
   type: CONST_GAME.gameLoopContinue
 });
 
+export const action$gameLoopWaitPlayer = (actions) => ({
+  type: CONST_GAME.gameLoopWaitPlayer
+  , data: actions
+});
+
+export const action$gameLoopExecute = (actions) => ({
+  type: CONST_GAME.gameLoopExecute
+  , data: actions
+});
+
 export const action$gameLoopStop = () => ({
   type: CONST_GAME.gameLoopStop
 });
@@ -28,6 +38,11 @@ export const action$gameSpawnPlayer = () => ({
 export const action$gameEvent = (event) => ({
   type: CONST_GAME.gameEvent
   , data: {eventType: event.type, data: event.data}
+});
+
+export const action$playerCommand = (command) => ({
+  type: CONST_GAME.playerCommand
+  , data: {command}
 });
 
 export const action$entityCommand = (command) => ({

@@ -31,9 +31,9 @@ export class EntityModel extends Record({
   addTrait(traitId, data) {
     const trait = TraitData[traitId];
     if (!trait) throw new Error(`No trait[${traitId}]`);
-    let traitData = (data instanceof Object)
-      ? Map(Object.assign({}, trait.defaultData, data))
-      : (data || trait.defaultData);
+    const traitData = (data instanceof Object) ? Map(Object.assign({}, trait.defaultData, data))
+      : data !== void 0 ? data
+        : trait.defaultData;
     return this.setIn(['traits', traitId], traitData)
       .update(self => trait.onAttach(self, traitData))
       .update(self => {

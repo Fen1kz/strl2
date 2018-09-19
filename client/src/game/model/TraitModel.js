@@ -5,6 +5,7 @@ export class TraitModel extends Record({
   id: null
   , defaultData: null
   , onAttach: _.identity
+  , getGfx: null
   , getAction: null
 }) {
   static fromJS(js) {
