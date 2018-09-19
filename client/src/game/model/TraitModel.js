@@ -4,6 +4,7 @@ import {Record, Map, List} from "immutable";
 export class TraitModel extends Record({
   id: null
   , onAttach: _.identity
+  , getAction: null
 }) {
   static fromJS(js) {
     return new TraitModel(js);

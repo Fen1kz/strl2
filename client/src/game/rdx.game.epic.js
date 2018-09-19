@@ -37,29 +37,29 @@ export default [
   ,
   (actions$, state$) => actions$.pipe(
     ofType(CONST_GAME.loadLevelComplete)
-    , op.map(action$gameSpawnPlayer)
+    , op.map(action$gameLoopStart)
   )
   // , (actions$, state$) => actions$.pipe(
   //   ofType(CONST_GAME.gameSpawnPlayer)
   //   , op.map(action$gameLoopStart)
   // )
-  ,
-  (actions$, state$) => Rx.merge(
-    actions$.pipe(ofType(CONST_GAME.gameLoopStart), op.mapTo(true))
-    , actions$.pipe(ofType(CONST_GAME.gameLoopStop), op.mapTo(false))
-  ).pipe(
-    op.distinctUntilChanged()
-    // , op.tap(console.log)
-    , op.filter(_.identity)
-    , op.switchMap(_ => createGameLoopStream(actions$))
-    // , op.map(i => ({type: 'interval', data: i}))
-    // , op.tap(console.log)
-    , op.map(_ => selectQueueFirst(state$.value))
-    , op.filter(_.identity)
-  )
+    // , (actions$, state$) => Rx.merge(
+    //   actions$.pipe(ofType(CONST_GAME.gameLoopStart), op.mapTo(true))
+    //   , actions$.pipe(ofType(CONST_GAME.gameLoopStop), op.mapTo(false))
+    // ).pipe(
+    //   op.distinctUntilChanged()
+    //   // , op.tap(console.log)
+    //   , op.filter(_.identity)
+    //   , op.switchMap(_ => createGameLoopStream(actions$))
+    //   // , op.map(i => ({type: 'interval', data: i}))
+    //   // , op.tap(console.log)
+    //   , op.map(_ => selectQueueFirst(state$.value))
+    //   , op.filter(_.identity)
+    // )
   , (actions$, state$) => Rx.merge(
     actions$.pipe(ofType(CONST_INPUT.tileClicked))
     , actions$.pipe(ofType(CONST_INPUT.entityClicked))
+    , actions$.pipe(ofType(CONST_GAME.gameLoopStart))
   ).pipe(
     op.switchMap((event) => {
       const game = selectGame(state$.value);

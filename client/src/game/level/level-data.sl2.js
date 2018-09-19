@@ -45,23 +45,13 @@ export default {
     {
       xy: [1,4]
       , traits: {
-        'AutoDoor': {
-          periodOpen: 1
-          , periodTransition: 2
-          , periodClosed: 1
-          , state: 0
-        }
+        'AutoDoor': {}
       }
     }
     , {
       xy: [2,4]
       , traits: {
-        'AutoDoor': {
-          periodOpen: 1
-          , periodTransition: 2
-          , periodClosed: 1
-          , state: 0
-        }
+        'AutoDoor': {}
       }
     }
   ]

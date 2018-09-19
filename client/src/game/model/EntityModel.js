@@ -10,6 +10,8 @@ import TraitData from './traits/TraitData';
 export class EntityModel extends Record({
   id: null
   , traits: Map()
+
+  , getActionHandlers: void 0
 }) {
   static fromJS(js) {
     return new EntityModel(js);
@@ -30,7 +32,11 @@ export class EntityModel extends Record({
     const trait = TraitData[traitId];
     if (!trait) throw new Error(`No trait[${traitId}]`);
     return this.setIn(['traits', traitId], traitData)
-      .update(self => trait.onAttach(self, traitData));
+      .update(self => trait.onAttach(self, traitData))
+      .update(self => {
+        if (!trait.getAction) return self;
+        return self.update('getActionHandlers', (list = List()) => list.push(trait.getAction));
+      });
   }
 
   hasTrait(traitId) {

@@ -18,7 +18,7 @@ createTraitData(TraitId.Position, {
 createTraitData(TraitId.Player, {
   onAttach: (entity) => entity
     .addTrait(TraitId.Impassable, true)
-    .addTrait(TraitId.Energy)
+    .addTrait(TraitId.Energy, 0)
     .addTrait(TraitId.TextGfx, '@')
 });
 
@@ -46,25 +46,28 @@ createTraitData(TraitId.Door, {
 });
 
 createTraitData(TraitId.AutoDoor, {
-  onAttach: (entity, {
-    periodOpen = 2
-    , periodTransition = 2
-    , periodClose = 2
-    , state = 0
+  onAttach(entity, {
+    toOpen = 20
+    , toClose = 20
+    , closed = true
     , orientation = 0
-  }) => {
-    let closed = state > periodOpen;
+  }) {
     let gfx = '?';
     if (closed) {
       gfx = orientation === 0 ? ']' : '[';
     } else {
-      gfx = '|'
+      gfx = '|';
     }
     return entity
       .addTrait(TraitId.Impassable, closed)
-      .addTrait(TraitId.Energy)
+      .addTrait(TraitId.Energy, 0)
       .addTrait(TraitId.TextGfx, gfx)
-      .addTrait(TraitId.Interactive, {})
+  }
+  , getAction(game, entity) {
+    console.log(this);
+    return null;
+    // if (this)
+    // if (game.getEntityEnergy(entity.id))
   }
 });
 

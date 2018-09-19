@@ -4,6 +4,10 @@ export const action$gameLoopStart = () => ({
   type: CONST_GAME.gameLoopStart
 });
 
+export const action$gameLoopContinue = () => ({
+  type: CONST_GAME.gameLoopContinue
+});
+
 export const action$gameLoopStop = () => ({
   type: CONST_GAME.gameLoopStop
 });
