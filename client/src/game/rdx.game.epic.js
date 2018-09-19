@@ -60,6 +60,7 @@ export default [
     actions$.pipe(ofType(CONST_INPUT.tileClicked))
     , actions$.pipe(ofType(CONST_INPUT.entityClicked))
     , actions$.pipe(ofType(CONST_GAME.gameLoopStart))
+    , actions$.pipe(ofType(CONST_GAME.gameLoopContinue))
   ).pipe(
     op.switchMap((event) => {
       const game = selectGame(state$.value);

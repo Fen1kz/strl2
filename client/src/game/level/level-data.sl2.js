@@ -45,13 +45,17 @@ export default {
     {
       xy: [1,4]
       , traits: {
-        'AutoDoor': {}
+        'AutoDoor': {
+          orientation: 0
+        }
       }
     }
     , {
       xy: [2,4]
       , traits: {
-        'AutoDoor': {}
+        'AutoDoor': {
+          orientation: 1
+        }
       }
     }
   ]

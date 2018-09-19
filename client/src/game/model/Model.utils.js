@@ -5,7 +5,7 @@ import {Record, fromJS} from "immutable";
 import {from} from 'rxjs';
 import {concatMap} from 'rxjs/operators';
 
-export const updateViaReduce = (list, cb) => (item) => _.reduce(list, cb, item);
+export const updateViaReduce = (list, cb) => (item) => list.reduce(cb, item);
 
 export const mixSystems = (...systems) => {
   const result = {

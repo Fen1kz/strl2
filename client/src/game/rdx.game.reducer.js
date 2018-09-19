@@ -10,7 +10,7 @@ import CONST_COMMAND from './const.commands';
 import {createGameModel} from './model/GameModel';
 import {parseLevel} from './model/GameModel.level-parsing';
 import {PlayerSystem} from './model/systems/PlayerSystem';
-import {TraitId} from './model/TraitModel';
+import TraitId from './model/traits/TraitId';
 // import PlayerModel from './model/PlayerModel.js'
 // import {ABILITY, ABILITY_TARGET_TYPE, ENTITY_TRAIT, TRAIT_TYPE} from "./model/EntityModel";
 // import EntityModel from "./model/EntityModel";
@@ -19,6 +19,7 @@ const initialState = createGameModel();
 
 export default createReducer(initialState, {
   [CONST_GAME.gameLoopStart]: (game) => game.onEvent(CONST_GAME.gameLoopStart)
+  , [CONST_GAME.gameLoopContinue]: (game) => game.onEvent(CONST_GAME.gameLoopContinue)
   // , [CONST_GAME.gameLoopStop]: (game) => game.set('running', false)
   // // , [CONST_GAME.playerMove]: (game, {x, y}) => game.update('player', player => player
   // //   .update('x', x0 => x0 + x)

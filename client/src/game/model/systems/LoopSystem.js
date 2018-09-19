@@ -15,6 +15,9 @@ export function LoopSystem() {
     running: false
     , queue: List()
     , actors: List()
+    , getEntityEnergy(entityId) {
+      return this.getEntity(entityId).traits.get(TraitId.Energy);
+    }
     , events: {
       [CONST_GAME.entityCommand]({command}) {
         console.log('Command', command);
@@ -22,19 +25,8 @@ export function LoopSystem() {
       }
       , onEntityAttach(entity) {
         if (entity.hasTrait(TraitId.Energy)) {
-          const requestAction$ = new Rx.Subject();
-          const action$ = requestAction$
-            .asObservable();
-          // .map(({game, entity}) => {
-          //   entity.getActions()
-          // });
-
           return this
             .update('actors', actors => actors.push(entity.id))
-            .updateEntity(entity.id, entity => entity
-              .set('action$', action$)
-              .set('requestAction$', requestAction$)
-            );
         }
         return this;
       }
@@ -43,9 +35,11 @@ export function LoopSystem() {
         return this.set('running', true);
       }
       , [CONST_GAME.gameLoopContinue]() {
-        return this.update(updateViaReduce(list, (game, actorId) => {
-          return game.updateEntity(actorId, actor => {
-            return actor.update(TraitId.Energy, energy => energy + 5);
+        return this.update(updateViaReduce(this.actors, (...args) => {
+          console.log(...args)
+          const [game, actorId] = args;
+          return game.updateEntity(actorId, (actor) => {
+            return actor.updateIn(['traits', TraitId.Energy], energy => energy + 5);
           })
         }));
       }
@@ -57,17 +51,31 @@ export function LoopSystem() {
       }
       , [CONST_GAME.gameLoopContinue](state) {
         const game = selectGame(state);
-        if (!game.running) return Rx.NEVER;
-        return Rx.forkJoin(
-          ...[game.actors.map(entityId => {
-            const entity = game.getEntity(entityId);
-            return Rx.of(entity
-              .getActionHandlers
-              .map(handler => handler(game, entity))
-              .filter(a => !!a)
-            )
-          })]
-        ).zip()
+        const actions = game.actors.map(entityId => {
+          if (game.getEntityEnergy(entityId) <= 0) return [];
+          const entity = game.getEntity(entityId);
+          const entityActions = entity
+            .getActionHandlers
+            .map(handler => handler(game, entity))
+            .filter(a => !!a)
+            .toArray();
+          return entityActions;
+
+          // return Rx.of(entity
+          //   .getActionHandlers
+          //   .map(handler => handler(game, entity))
+          //   .filter(a => !!a)
+          // )
+        })
+          .filter(actionArray => actionArray.length !== 0)
+          .toArray();
+        console.log(actions);
+        if (actions.length === 0) {
+          return Rx.of(action$gameLoopContinue())
+            .pipe(op.delay(1000));
+        } else {
+          return Rx.NEVER;
+        }
       }
     }
   }

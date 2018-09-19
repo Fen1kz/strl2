@@ -23,14 +23,17 @@ export class EntityModel extends Record({
       const tileId = getTileId(xy[0], xy[1]);
       entity = entity.addTrait(TraitId.Position, tileId)
     }
-    return entity.update(updateViaReduce(traits, (entity, traitData, traitId) => {
+    return entity.update(updateViaReduce(_.entries(traits), (entity, [traitId, traitData]) => {
       return entity.addTrait(traitId, traitData);
     }))
   }
 
-  addTrait(traitId, traitData) {
+  addTrait(traitId, data) {
     const trait = TraitData[traitId];
     if (!trait) throw new Error(`No trait[${traitId}]`);
+    let traitData = (data instanceof Object)
+      ? Map(Object.assign({}, trait.defaultData, data))
+      : (data || trait.defaultData);
     return this.setIn(['traits', traitId], traitData)
       .update(self => trait.onAttach(self, traitData))
       .update(self => {

@@ -20,6 +20,9 @@ createTraitData(TraitId.Player, {
     .addTrait(TraitId.Impassable, true)
     .addTrait(TraitId.Energy, 0)
     .addTrait(TraitId.TextGfx, '@')
+  , getAction(game, entity) {
+    return true;
+  }
 });
 
 createTraitData(TraitId.Impassable, {
@@ -46,15 +49,16 @@ createTraitData(TraitId.Door, {
 });
 
 createTraitData(TraitId.AutoDoor, {
-  onAttach(entity, {
-    toOpen = 20
-    , toClose = 20
-    , closed = true
-    , orientation = 0
-  }) {
+  defaultData: {
+    toOpen: 20
+    , toClose: 20
+    , closed: true
+    , orientation: 0
+  }
+  , onAttach(entity, traitData) {
     let gfx = '?';
-    if (closed) {
-      gfx = orientation === 0 ? ']' : '[';
+    if (traitData.get('closed')) {
+      gfx = traitData.get('orientation') === 0 ? ']' : '[';
     } else {
       gfx = '|';
     }
@@ -64,10 +68,20 @@ createTraitData(TraitId.AutoDoor, {
       .addTrait(TraitId.TextGfx, gfx)
   }
   , getAction(game, entity) {
-    console.log(this);
-    return null;
-    // if (this)
-    // if (game.getEntityEnergy(entity.id))
+    const trait = entity.getIn(['traits', TraitId.AutoDoor]);
+    if (trait.get('closed')) {
+      return {
+        type: 'OPEN'
+        , cost: trait.get('toOpen')
+        , sourceId: entity.id
+      }
+    } else {
+      return {
+        type: 'CLOSE'
+        , cost: trait.get('toClose')
+        , sourceId: entity.id
+      }
+    }
   }
 });
 

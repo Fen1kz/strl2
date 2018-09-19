@@ -1,0 +1,7 @@
+export default {
+  MOVE: 'MOVE'
+  , OPEN: 'OPEN'
+  , CLOSE: 'CLOSE'
+  , AUTO_DOOR_OPEN: 'AUTO_DOOR_OPEN'
+  , AUTO_DOOR_CLOSE: 'AUTO_DOOR_CLOSE'
+}
