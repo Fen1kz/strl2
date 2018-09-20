@@ -45,7 +45,12 @@ export const action$playerCommand = (command) => ({
   , data: {command}
 });
 
-export const action$entityCommand = (command) => ({
-  type: CONST_GAME.entityCommand
+export const action$entityCommandCheck = (command) => ({
+  type: CONST_GAME.entityCommandCheck
+  , data: {command}
+});
+
+export const action$entityCommandExecute = (command) => ({
+  type: CONST_GAME.entityCommandExecute
   , data: {command}
 });

@@ -1,5 +1,6 @@
 import React from 'react';
 import {connect} from "react-redux";
+import {Spring, Transition} from 'react-spring';
 
 import {CELLSIZE, CELLSIZE2, translateXY} from "./const.game";
 
@@ -50,19 +51,10 @@ export class Game extends React.Component {
     this.props.action$tileClicked(tile.id);
   };
 
-  render() {
+  renderSVG() {
     const {game, player, tiles} = this.props;
-
-    return (<div>
-      <div>
-        <button onClick={e => this.props.action$loadGameViewComplete()}>START</button>
-        <button onClick={e => this.props.action$gameLoopStop()}>STOP</button>
-      </div>
-      <svg
-        width={300}
-        height={300}
-        viewBox={game.camera.getViewBox()}
-      >
+    return (
+      <g className='GameContainer' style={{transform: game.camera.getOffset()}}>
         <g className='Level'>
           {tiles && tiles.map(tile => isInsideViewport(game.camera, tile)
             ? <Tile key={tile.id} tile={tile} onClick={this.onTileClick}/>
@@ -85,12 +77,29 @@ export class Game extends React.Component {
         <g className='Overlay'>
           {/*{player && <GameQueue start={player.tile.pos} queue={game.queue}/>}*/}
         </g>
+      </g>
+    )
+  }
 
+  render() {
+    const {game, player, tiles} = this.props;
+
+    return (<div>
+      <div>
+        <button onClick={e => this.props.action$loadGameViewComplete()}>START</button>
+        <button onClick={e => this.props.action$gameLoopStop()}>STOP</button>
+      </div>
+      <svg
+        width={300}
+        height={300}
+        viewBox={game.camera.getViewBox()}
+      >{this.renderSVG()}
       </svg>
       <pre>
         {JSON.stringify(game.running)}
         {JSON.stringify(game.queue)}
       </pre>
+
     </div>);
   }
 }

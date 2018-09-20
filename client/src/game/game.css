@@ -6,6 +6,15 @@
     pointer-events: none;
 }
 
+.Entity .EntityTextDbg {
+    font: 10px monospace;
+    font-weight: bold;
+    text-anchor: middle;
+    alignment-baseline: central;
+    fill: #00F;
+    pointer-events: none;
+}
+
 .Tile .TileTextDbg {
     font: 6px monospace;
     text-anchor: middle;
@@ -23,4 +32,9 @@
     fill: #eee;
     stroke-width: 1px;
     stroke: #999;
+}
+
+.GameContainer
+, .Entity {
+    transition: transform .25s;
 }

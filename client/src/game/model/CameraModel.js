@@ -13,12 +13,21 @@ export default class CameraModel extends Record({
   , maxX: 0
   , maxY: 0
 }) {
-  getViewBox(tiles) {
+  getViewBox() {
     const x = this.x * CELLSIZE;
     const y = this.y * CELLSIZE;
     const width = this.width * CELLSIZE;
     const height = this.height * CELLSIZE;
-    return `${x - width / 2} ${y - height / 2} ${width} ${height}`;
+    return `0 0 ${width} ${height}`;
+  }
+
+  getOffset() {
+    const x = this.x * CELLSIZE;
+    const y = this.y * CELLSIZE;
+    const width = this.width * CELLSIZE;
+    const height = this.height * CELLSIZE;
+    console.log(`translate(${x}px, ${y}px)`);
+    return `translate(${-x + width / 2}px, ${-y + height / 2}px)`;
   }
 
   setTo(tileId) {

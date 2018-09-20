@@ -1,6 +1,6 @@
 import React from "react";
 
-import {translateXY} from "../const.game";
+import {CELLSIZE2, translateXY} from "../const.game";
 
 import TraitId from "../model/traits/TraitId";
 import TraitData from "../model/traits/TraitData";
@@ -42,6 +42,10 @@ export class Entity extends React.PureComponent {
       transform: `translate(${translateXY(xy)})`
     }}>
       <EntityText entity={entity}/>
+      {entity.getTrait(TraitId.Energy) !== void 0
+        ? <text y={CELLSIZE2 / 2} className='EntityTextDbg'>{entity.getTrait(TraitId.Energy)}</text>
+        : null
+      }
     </g>);
   }
 }

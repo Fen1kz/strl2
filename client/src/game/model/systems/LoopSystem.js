@@ -13,6 +13,7 @@ import {
   , action$gameLoopWaitPlayer
   , action$gameLoopExecute, action$entityCommand
 } from "../../rdx.game.actions";
+import CommandData from "../commands/CommandData";
 
 export function LoopSystem() {
   return {
@@ -88,9 +89,6 @@ export function LoopSystem() {
           return Rx.of(action$gameLoopExecute(actions));
         }
       }
-      // , [CONST_GAME.gameLoopWaitPlayer](state) {
-      //   return Rx.NEVER;
-      // }
       , [CONST_GAME.playerCommand](state, {command}) {
         if (this.waitingPlayer) {
           return Rx.of(action$gameLoopExecute(this.waitingActions.push(command).toArray()));
@@ -103,6 +101,10 @@ export function LoopSystem() {
           Rx.from(actions.map(action => action$entityCommand(action)))
           , Rx.of(action$gameLoopContinue())
         );
+      }
+      , [CONST_GAME.entityCommandCheck](state, {command}) {
+        const commandData = CommandData[command.id];
+        const commandResult = commandData.effect(this, command);
       }
     }
   }

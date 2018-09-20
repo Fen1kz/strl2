@@ -64,6 +64,7 @@ export default [
     , actions$.pipe(ofType(CONST_GAME.gameLoopWaitPlayer))
     , actions$.pipe(ofType(CONST_GAME.gameLoopExecute))
     , actions$.pipe(ofType(CONST_GAME.playerCommand))
+    , actions$.pipe(ofType(CONST_GAME.entityCommandCheck))
   ).pipe(
     op.switchMap((event) => {
       const game = selectGame(state$.value);

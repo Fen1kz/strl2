@@ -9,5 +9,6 @@ export default {
   , gameSpawnPlayer: 'gameSpawnPlayer'
   , gameEvent: 'gameEvent'
   , playerCommand: 'playerCommand'
-  , entityCommand: 'entityCommand'
+  , entityCommandCheck: 'entityCommandCheck'
+  , entityCommandExecute: 'entityCommandExecute'
 };
