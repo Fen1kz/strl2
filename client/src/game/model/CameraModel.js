@@ -26,7 +26,6 @@ export default class CameraModel extends Record({
     const y = this.y * CELLSIZE;
     const width = this.width * CELLSIZE;
     const height = this.height * CELLSIZE;
-    console.log(`translate(${x}px, ${y}px)`);
     return `translate(${-x + width / 2}px, ${-y + height / 2}px)`;
   }
 

@@ -64,9 +64,9 @@ export default [
     , actions$.pipe(ofType(CONST_GAME.gameLoopWaitPlayer))
     , actions$.pipe(ofType(CONST_GAME.gameLoopExecute))
     , actions$.pipe(ofType(CONST_GAME.playerCommand))
-    , actions$.pipe(ofType(CONST_GAME.entityCommandCheck))
+    , actions$.pipe(ofType(CONST_GAME.getEntityCommandResult))
   ).pipe(
-    op.switchMap((event) => {
+    op.mergeMap((event) => {
       const game = selectGame(state$.value);
       if (!game.rxEventHandlers.has(event.type)) {
         return Rx.NEVER;
