@@ -85,7 +85,7 @@ export function LoopSystem() {
         return Rx.of(action$gameLoopContinue());
       }
       , [CONST_GAME.gameLoopContinue]() {
-        const getEntityCommands = (entityId) => {
+        const getEntityCommandArray = (entityId) => {
           const entity = this.getEntity(entityId);
           return entity.getActionHandlers.toArray()
             .map(handler => handler(this, entity))
@@ -95,10 +95,9 @@ export function LoopSystem() {
         };
 
         const getEntityCommandStream$ = (entityId) => Rx.forkJoin(
-          getEntityCommands(entityId)
+          getEntityCommandArray(entityId)
         ).pipe(
           op.map(entityCommands => entityCommands.filter(command => !!command))
-          // , op.tap(console.log.bind(null, 'getEntityCommandStream$'))
         );
 
         return Rx.forkJoin(
@@ -140,16 +139,7 @@ export function LoopSystem() {
         const commandData = CommandData[command.id];
         const commandResult = commandData.getResult(this, command);
         if (commandResult.status === CommandResultType.SUCCESS) {
-          if (commandResult.energy > 0) {
-            return Rx.of(
-              action$entityCommandApplyEffect(command)
-              , action$entityCommandRequestActions(entityId)
-            );
-          } else {
-            return Rx.of(
-              action$entityCommandApplyEffect(command)
-            );
-          }
+          return Rx.of(action$entityCommandApplyEffect(command));
         } else if (commandResult.status === CommandResultType.REPLACE) {
           return Rx.of(action$entityCommandGetResult(commandResult.replace))
         } else if (commandResult.status === CommandResultType.FAILURE) {
