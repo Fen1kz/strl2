@@ -23,7 +23,11 @@ createTraitData(TraitId.Player, {
     .addTrait(TraitId.Energy, 0)
     .addTrait(TraitId.TextGfx, '@')
   , getAction(game, entity) {
-    return true;
+    if (!game.queue.isEmpty()) {
+      return game.queue.first();
+    } else {
+      return TraitId.Player;
+    }
   }
 });
 

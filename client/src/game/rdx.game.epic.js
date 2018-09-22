@@ -34,28 +34,10 @@ export default [
     , op.pluck('default')
     , op.map(action$loadLevelComplete)
   )
-  ,
-  (actions$, state$) => actions$.pipe(
+  , (actions$, state$) => actions$.pipe(
     ofType(CONST_GAME.loadLevelComplete)
     , op.map(action$gameLoopStart)
   )
-  // , (actions$, state$) => actions$.pipe(
-  //   ofType(CONST_GAME.gameSpawnPlayer)
-  //   , op.map(action$gameLoopStart)
-  // )
-    // , (actions$, state$) => Rx.merge(
-    //   actions$.pipe(ofType(CONST_GAME.gameLoopStart), op.mapTo(true))
-    //   , actions$.pipe(ofType(CONST_GAME.gameLoopStop), op.mapTo(false))
-    // ).pipe(
-    //   op.distinctUntilChanged()
-    //   // , op.tap(console.log)
-    //   , op.filter(_.identity)
-    //   , op.switchMap(_ => createGameLoopStream(actions$))
-    //   // , op.map(i => ({type: 'interval', data: i}))
-    //   // , op.tap(console.log)
-    //   , op.map(_ => selectQueueFirst(state$.value))
-    //   , op.filter(_.identity)
-    // )
   , (actions$, state$) => Rx.merge(
     actions$.pipe(ofType(CONST_INPUT.tileClicked))
     , actions$.pipe(ofType(CONST_INPUT.entityClicked))
@@ -64,7 +46,9 @@ export default [
     , actions$.pipe(ofType(CONST_GAME.gameLoopWaitPlayer))
     , actions$.pipe(ofType(CONST_GAME.gameLoopExecute))
     , actions$.pipe(ofType(CONST_GAME.playerCommand))
-    , actions$.pipe(ofType(CONST_GAME.getEntityCommandResult))
+    , actions$.pipe(ofType(CONST_GAME.entityCommandRequestActions))
+    , actions$.pipe(ofType(CONST_GAME.entityCommandGetResult))
+    , actions$.pipe(ofType(CONST_GAME.entityCommandApplyEffect))
   ).pipe(
     op.mergeMap((event) => {
       const game = selectGame(state$.value);
@@ -73,40 +57,6 @@ export default [
       }
       return game.onRxEvent(event.type, state$.value, event.data);
     })
-    // , (actions$, state$) => Rx.merge(
-    //   actions$.pipe(ofType(CONST_INPUT.tileClicked))
-    //   , actions$.pipe(ofType(CONST_INPUT.entityClicked))
-    // ).pipe(
-    //   op.pluck('data')
-    //   , op.switchMap(({tileId, entityId}) => {
-    //     const game = selectGame(state$.value);
-    //     const player = game.getPlayer();
-    //
-    //     const tile = game.getTile(tileId);
-    //
-    //     if (tile.isNext(player.tileId)) {
-    //       const elist = tile.getEntityList(game);
-    //
-    //       let abils = elist.reduce((entityActionList, entity) => {
-    //           return entityActionList.concat(
-    //             entity.getAbilities(game, player, entity).map(abil => [abil, entity.id])
-    //           );
-    //         }, player.getAbilities(game, player, tile).map(abil => [abil, tile.id])
-    //       );
-    //
-    //       if (abils[0]) {
-    //         const [abil, targetId] = abils[0];
-    //
-    //         return Rx.of(action$entityAbility(
-    //           abil.id
-    //           , player.id
-    //           , targetId
-    //         ))
-    //       }
-    //     }
-    //
-    //     return Rx.NEVER;
-    //   })
   )
 ];
 

@@ -48,6 +48,9 @@ export default createReducer(initialState, {
   //   .update('camera', camera => camera.setTo(spawnPoint.tileId))
   // }
   , [CONST_GAME.playerCommand]: (game, data) => game.onEvent(CONST_GAME.playerCommand, data)
+  // , [CONST_GAME.entityCommandRequestActions]: (game, data) => game.onEvent(CONST_GAME.playerCommand, data)
+  , [CONST_GAME.entityCommandGetResult]: (game, data) => game.onEvent(CONST_GAME.entityCommandGetResult, data)
+  // , [CONST_GAME.entityCommandApplyEffect]: (game, data) => game.onEvent(CONST_GAME.entityCommandApplyEffect, data)
   , [CONST_GAME.entityCommandCheck]: (game, {command}) => {
     const commandData = CommandData[command.id];
     const commandResult = commandData.effect(game, command);

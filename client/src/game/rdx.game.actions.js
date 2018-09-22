@@ -45,12 +45,17 @@ export const action$playerCommand = (command) => ({
   , data: {command}
 });
 
-export const action$entityCommandCheck = (command) => ({
-  type: CONST_GAME.entityCommandCheck
+export const action$entityCommandRequestActions = (entityId) => ({
+  type: CONST_GAME.entityCommandRequestActions
+  , data: {entityId}
+});
+
+export const action$entityCommandGetResult = (command) => ({
+  type: CONST_GAME.entityCommandGetResult
   , data: {command}
 });
 
-export const action$entityCommandExecute = (command) => ({
-  type: CONST_GAME.entityCommandExecute
+export const action$entityCommandApplyEffect = (command) => ({
+  type: CONST_GAME.entityCommandApplyEffect
   , data: {command}
 });

@@ -12,21 +12,17 @@ import {
   action$gameLoopContinue
   , action$gameLoopWaitPlayer
   , action$gameLoopExecute
-  , action$entityCommandCheck
-  , action$entityCommandExecute
+  , action$entityCommandRequestActions
+  , action$entityCommandGetResult
+  , action$entityCommandApplyEffect
 } from "../../rdx.game.actions";
 import CommandData from "../commands/CommandData";
+import {CommandResultType} from "../commands/CommandResult";
 
 const consoleObs = (name) => ({
-  next(v) {
-    console.log(name, v)
-  }
-  , error(e) {
-    console.error(name, e)
-  }
-  , complete() {
-    console.log(name, 'Completed')
-  }
+  next: v => console.log(name, v)
+  , error: e => console.error(name, e)
+  , complete: () => console.log(name, 'Completed')
 });
 
 export function LoopSystem() {
@@ -42,11 +38,7 @@ export function LoopSystem() {
       return this.getEntity(entityId).traits.get(TraitId.Energy);
     }
     , events: {
-      [CONST_GAME.playerCommand]({command}) {
-        return this
-          .update('queue', queue => queue.push(command));
-      }
-      , onEntityAttach(entity) {
+      onEntityAttach(entity) {
         if (entity.hasTrait(TraitId.Energy)) {
           return this
             .update('actors', actors => actors.push(entity.id))
@@ -62,6 +54,19 @@ export function LoopSystem() {
             return actor.updateIn(['traits', TraitId.Energy], energy => energy + 5);
           })
         }));
+      }
+      , [CONST_GAME.playerCommand]({command}) {
+        queue$.next(command);
+        return this
+          .update('queue', queue => queue.push(command));
+      }
+      , [CONST_GAME.entityCommandGetResult]({command}) {
+        if (command === this.queue.first()) {
+          console.log('EQUAL');
+          return this
+            .update('queue', queue => queue.skip(1));
+        }
+        return this
       }
       , [CONST_GAME.gameLoopWaitPlayer](actions) {
         return this
@@ -84,61 +89,82 @@ export function LoopSystem() {
           const entity = this.getEntity(entityId);
           return entity.getActionHandlers.toArray()
             .map(handler => handler(this, entity))
-            .map(command => {
-              if (command !== true) {
-                return command;
-              } else {
-                if (!this.queue.isEmpty()) {
-                  return this.queue.first();
-                } else {
-                  return queue$.asObservable().pipe(op.tap(console.log), op.first())
-                }
-              }
-            })
+            .map(command => command === TraitId.Player
+              ? queue$.asObservable().pipe(op.first())
+              : Rx.of(command))
         };
 
         const getEntityCommandStream$ = (entityId) => Rx.forkJoin(
           getEntityCommands(entityId)
-            // .map(a => (console.log(a), a))
-            .map(a => Rx.isObservable(a) ? a : Rx.of(a))
-            .map(o => o.pipe(op.tap((...args) => console.log('operation', ...args))))
-            .map(a => (console.log(a), a))
-        ).pipe(op.map(entityCommands => entityCommands.filter(command => !!command)));
+        ).pipe(
+          op.map(entityCommands => entityCommands.filter(command => !!command))
+          // , op.tap(console.log.bind(null, 'getEntityCommandStream$'))
+        );
 
         return Rx.forkJoin(
           this.actors.toArray()
             .filter(entityId => this.getEntityEnergy(entityId) >= 0)
             .map(getEntityCommandStream$)
+          // .map(entityId => this.onRxEvent(CONST_GAME.entityCommandRequestActions, state, {entityId}))
+        ).pipe(
+          op.map(arrayOfCommands => _.flatten(arrayOfCommands))
+          , op.concatMap(commands => commands)
+          , op.map(command => action$entityCommandGetResult(command))
         )
+      }
+      , [CONST_GAME.entityCommandRequestActions](state, {entityId}) {
+        const getEntityCommands = (entityId) => {
+          const entity = this.getEntity(entityId);
+          return entity.getActionHandlers.toArray()
+            .map(handler => handler(this, entity))
+            .map(command => command === TraitId.Player
+              ? queue$.asObservable().pipe(op.first())
+              : Rx.of(command))
+        };
+
+        const getEntityCommandStream$ = (entityId) => Rx.forkJoin(
+          getEntityCommands(entityId)
+        ).pipe(
+          op.map(entityCommands => entityCommands.filter(command => !!command))
+        );
+
+        return getEntityCommandStream$(entityId)
           .pipe(
-            op.tap((...args) => console.log('FINALLY', ...args))
-            , op.switchMap(commands => Rx.from(commands))
-            , op.tap((...args) => console.log('commands', ...args))
-          )
-        //   .subscribe(consoleObs('fk'));
+            op.concatMap(commands => commands)
+            , op.map(command => action$entityCommandGetResult(command))
+          );
         // return Rx.NEVER
       }
-      , [CONST_GAME.playerCommand](state, {command}) {
-        queue$.next(command);
-        // if (this.waitingPlayer) {
-        //   return Rx.of(action$gameLoopExecute(this.waitingActions.push(command).toArray()));
-        // }
-        return Rx.NEVER;
-      }
-      , [CONST_GAME.gameLoopExecute](state, actions) {
-        return Rx.concat(
-          Rx.from(actions.map(action => action$entityCommandCheck(action)))
-          , Rx.of(action$gameLoopContinue())
-        );
-      }
-      , [CONST_GAME.entityCommandCheck](state, {command}) {
+      , [CONST_GAME.entityCommandGetResult](state, {command}) {
+        const entityId = command.sourceId;
         const commandData = CommandData[command.id];
-        const commandResult = commandData.effect(this, command);
-        if (commandResult !== false) {
-          return Rx.of(action$entityCommandExecute(command));
+        const commandResult = commandData.getResult(this, command);
+        if (commandResult.status === CommandResultType.SUCCESS) {
+          if (commandResult.energy > 0) {
+            return Rx.of(
+              action$entityCommandApplyEffect(command)
+              , action$entityCommandRequestActions(entityId)
+            );
+          } else {
+            return Rx.of(
+              action$entityCommandApplyEffect(command)
+            );
+          }
+        } else if (commandResult.status === CommandResultType.REPLACE) {
+          return Rx.of(action$entityCommandGetResult(commandResult.replace))
+        } else if (commandResult.status === CommandResultType.FAILURE) {
+          return Rx.of(action$entityCommandRequestActions(entityId))
+        } else {
+          console.error(`Invalid commandResult`, commandResult);
+          throw new Error(`Invalid commandResult ${commandResult}`);
         }
-        return Rx.NEVER;
       }
+      // , [CONST_GAME.gameLoopExecute](state, actions) {
+      //   return Rx.concat(
+      //     Rx.from(actions.map(action => action$entityCommandCheck(action)))
+      //     , Rx.of(action$gameLoopContinue())
+      //   );
+      // }
     }
   }
 }
