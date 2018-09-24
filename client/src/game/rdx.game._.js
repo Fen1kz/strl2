@@ -1,8 +1,7 @@
 export default {
   gameLoopStart: 'gameLoopStart'
   , gameLoopContinue: 'gameLoopContinue'
-  , gameLoopWaitPlayer: 'gameLoopWaitPlayer'
-  , gameLoopExecute: 'gameLoopExecute'
+  , gameLoopEnergy: 'gameLoopEnergy'
   , gameLoopStop: 'gameLoopStop'
   , loadGameViewComplete: 'loadGameViewComplete'
   , loadLevelComplete: 'loadLevelComplete'
@@ -12,5 +11,6 @@ export default {
 
   , entityCommandRequestActions: 'entityCommandRequestActions'
   , entityCommandGetResult: 'entityCommandGetResult'
-  , entityCommandApplyEffect: 'entityCommandApplyEffect'
+  , entityCommandScheduleEffect: 'entityCommandScheduleEffect'
+  , entityCommandApplyEffects: 'entityCommandApplyEffects'
 };

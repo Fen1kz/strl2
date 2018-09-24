@@ -43,12 +43,10 @@ export default [
     , actions$.pipe(ofType(CONST_INPUT.entityClicked))
     , actions$.pipe(ofType(CONST_GAME.gameLoopStart))
     , actions$.pipe(ofType(CONST_GAME.gameLoopContinue))
-    , actions$.pipe(ofType(CONST_GAME.gameLoopWaitPlayer))
-    , actions$.pipe(ofType(CONST_GAME.gameLoopExecute))
     , actions$.pipe(ofType(CONST_GAME.playerCommand))
     , actions$.pipe(ofType(CONST_GAME.entityCommandRequestActions))
     , actions$.pipe(ofType(CONST_GAME.entityCommandGetResult))
-    , actions$.pipe(ofType(CONST_GAME.entityCommandApplyEffect))
+    , actions$.pipe(ofType(CONST_GAME.entityCommandApplyEffects))
   ).pipe(
     op.mergeMap((event) => {
       const game = selectGame(state$.value);

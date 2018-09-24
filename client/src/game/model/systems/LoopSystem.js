@@ -10,11 +10,11 @@ import {updateViaReduce} from "../Model.utils";
 import {selectGame} from "../../rdx.game.selectors";
 import {
   action$gameLoopContinue
-  , action$gameLoopWaitPlayer
-  , action$gameLoopExecute
+  , action$gameLoopEnergy
   , action$entityCommandRequestActions
   , action$entityCommandGetResult
-  , action$entityCommandApplyEffect
+  , action$entityCommandScheduleEffect
+  , action$entityCommandApplyEffects
 } from "../../rdx.game.actions";
 import CommandData from "../commands/CommandData";
 import {CommandResultType} from "../commands/CommandResult";
@@ -30,8 +30,7 @@ export function LoopSystem() {
   // queue$.subscribe(consoleObs('queue$'));
   return {
     running: false
-    , waitingPlayer: false
-    , waitingActions: List()
+    , nextTurn: List()
     , queue: List()
     , actors: List()
     , getEntityEnergy(entityId) {
@@ -48,7 +47,7 @@ export function LoopSystem() {
       , [CONST_GAME.gameLoopStart]() {
         return this.set('running', true);
       }
-      , [CONST_GAME.gameLoopContinue]() {
+      , [CONST_GAME.gameLoopEnergy]() {
         return this.update(updateViaReduce(this.actors, (game, actorId) => {
           return game.updateEntity(actorId, (actor) => {
             return actor.updateIn(['traits', TraitId.Energy], energy => energy + 5);
@@ -58,26 +57,7 @@ export function LoopSystem() {
       , [CONST_GAME.playerCommand]({command}) {
         queue$.next(command);
         return this
-          .update('queue', queue => queue.push(command));
-      }
-      , [CONST_GAME.entityCommandGetResult]({command}) {
-        if (command === this.queue.first()) {
-          console.log('EQUAL');
-          return this
-            .update('queue', queue => queue.skip(1));
-        }
-        return this
-      }
-      , [CONST_GAME.gameLoopWaitPlayer](actions) {
-        return this
-          .set('waitingPlayer', true)
-          .set('waitingActions', List(actions));
-      }
-      , [CONST_GAME.gameLoopExecute](actions) {
-        return this
-          .set('waitingPlayer', false)
-          .set('waitingActions', List())
-          .update('queue', queue => queue.skip(1));
+        // .update('queue', queue => queue.push(command));
       }
     }
     , rxEvents: {
@@ -85,76 +65,64 @@ export function LoopSystem() {
         return Rx.of(action$gameLoopContinue());
       }
       , [CONST_GAME.gameLoopContinue]() {
-        const getEntityCommandArray = (entityId) => {
-          const entity = this.getEntity(entityId);
-          return entity.getActionHandlers.toArray()
-            .map(handler => handler(this, entity))
-            .map(command => command === TraitId.Player
-              ? queue$.asObservable().pipe(op.first())
-              : Rx.of(command))
-        };
+        const actorsArrayOfCommands = this.actors.toArray()
+          .filter(entityId => this.getEntityEnergy(entityId) >= 0)
+          .map(entityId => entityCommandRequestActions(this, entityId, queue$));
 
-        const getEntityCommandStream$ = (entityId) => Rx.forkJoin(
-          getEntityCommandArray(entityId)
-        ).pipe(
-          op.map(entityCommands => entityCommands.filter(command => !!command))
-        );
-
-        return Rx.forkJoin(
-          this.actors.toArray()
-            .filter(entityId => this.getEntityEnergy(entityId) >= 0)
-            .map(getEntityCommandStream$)
-          // .map(entityId => this.onRxEvent(CONST_GAME.entityCommandRequestActions, state, {entityId}))
-        ).pipe(
-          op.map(arrayOfCommands => _.flatten(arrayOfCommands))
-          , op.concatMap(commands => commands)
-          , op.map(command => action$entityCommandGetResult(command))
-        )
-      }
-      , [CONST_GAME.entityCommandRequestActions](state, {entityId}) {
-        const getEntityCommands = (entityId) => {
-          const entity = this.getEntity(entityId);
-          return entity.getActionHandlers.toArray()
-            .map(handler => handler(this, entity))
-            .map(command => command === TraitId.Player
-              ? queue$.asObservable().pipe(op.first())
-              : Rx.of(command))
-        };
-
-        const getEntityCommandStream$ = (entityId) => Rx.forkJoin(
-          getEntityCommands(entityId)
-        ).pipe(
-          op.map(entityCommands => entityCommands.filter(command => !!command))
-        );
-
-        return getEntityCommandStream$(entityId)
-          .pipe(
-            op.concatMap(commands => commands)
-            , op.map(command => action$entityCommandGetResult(command))
-          );
-        // return Rx.NEVER
-      }
-      , [CONST_GAME.entityCommandGetResult](state, {command}) {
-        const entityId = command.sourceId;
-        const commandData = CommandData[command.id];
-        const commandResult = commandData.getResult(this, command);
-        if (commandResult.status === CommandResultType.SUCCESS) {
-          return Rx.of(action$entityCommandApplyEffect(command));
-        } else if (commandResult.status === CommandResultType.REPLACE) {
-          return Rx.of(action$entityCommandGetResult(commandResult.replace))
-        } else if (commandResult.status === CommandResultType.FAILURE) {
-          return Rx.of(action$entityCommandRequestActions(entityId))
+        if (actorsArrayOfCommands.length === 0) {
+          return Rx.concat(
+            Rx.of(action$gameLoopEnergy())
+            , Rx.of(action$gameLoopContinue())
+          )
         } else {
-          console.error(`Invalid commandResult`, commandResult);
-          throw new Error(`Invalid commandResult ${commandResult}`);
+          return Rx.concat(
+            Rx.forkJoin(actorsArrayOfCommands)
+              .pipe(
+                op.concatAll() // [[C, C], [C, C], [C, C]] => [C, C] - [C, C] - [C, C]
+                , op.concatAll() // [C, C] - [C, C] - [C, C] => C - C - C - C - C - C
+                , op.concatMap(command => entityCommandGetResult(this, command, queue$)
+                )
+              )
+            , Rx.of(action$gameLoopContinue())
+          )
         }
       }
-      // , [CONST_GAME.gameLoopExecute](state, actions) {
-      //   return Rx.concat(
-      //     Rx.from(actions.map(action => action$entityCommandCheck(action)))
-      //     , Rx.of(action$gameLoopContinue())
-      //   );
-      // }
     }
+  }
+}
+
+function entityCommandRequestActions(game, entityId, queue$) {
+  const entity = game.getEntity(entityId);
+  const entityCommandArray = entity.getActionHandlers.toArray()
+    .map(handler => handler(game, entity))
+    .filter(command => !!command)
+    .map(command => command === TraitId.Player
+      ? queue$.asObservable().pipe(op.first())
+      : Rx.of(command));
+
+  return (entityCommandArray.length === 0
+    ? Rx.of([])
+    : Rx.forkJoin(entityCommandArray))
+}
+
+function entityCommandGetResult(game, command, queue$) {
+  const entityId = command.sourceId;
+  const commandData = CommandData[command.id];
+  const commandResult = commandData.getResult(game, command);
+  if (commandResult.status === CommandResultType.SUCCESS) {
+    return Rx.of(action$entityCommandScheduleEffect(command));
+  } else if (commandResult.status === CommandResultType.REPLACE) {
+    return entityCommandGetResult(game, commandResult.replace, queue$, onSuccess)
+  } else if (commandResult.status === CommandResultType.FAILURE) {
+    return entityCommandRequestActions(game, entityId, queue$)
+      .pipe(op.tap(console.log.bind(null, 'entityCommandGetResult FAILURE 1')),
+        op.concatMap(commands => commands)
+        , op.tap(console.log.bind(null, 'entityCommandGetResult FAILURE 2'))
+        , op.map(command => entityCommandGetResult(game, command, queue$, onSuccess))
+        , op.concatMap(a => Rx.isObservable(a) ? a : Rx.of(a))
+      )
+  } else {
+    console.error(`Invalid commandResult`, commandResult);
+    throw new Error(`Invalid commandResult ${commandResult}`);
   }
 }

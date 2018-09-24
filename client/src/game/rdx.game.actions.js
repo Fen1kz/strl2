@@ -8,9 +8,8 @@ export const action$gameLoopContinue = () => ({
   type: CONST_GAME.gameLoopContinue
 });
 
-export const action$gameLoopWaitPlayer = (actions) => ({
-  type: CONST_GAME.gameLoopWaitPlayer
-  , data: actions
+export const action$gameLoopEnergy = () => ({
+  type: CONST_GAME.gameLoopEnergy
 });
 
 export const action$gameLoopExecute = (actions) => ({
@@ -55,7 +54,11 @@ export const action$entityCommandGetResult = (command) => ({
   , data: {command}
 });
 
-export const action$entityCommandApplyEffect = (command) => ({
-  type: CONST_GAME.entityCommandApplyEffect
+export const action$entityCommandScheduleEffect = (command) => ({
+  type: CONST_GAME.entityCommandScheduleEffect
   , data: {command}
+});
+
+export const action$entityCommandApplyEffects = () => ({
+  type: CONST_GAME.entityCommandApplyEffects
 });
