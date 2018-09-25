@@ -19,8 +19,26 @@ export class CommandResult extends Record({
     });
   }
 
-  static getSuccessfulResult(game, command) {
-    return CommandResult.fromJS(CommandResultType.SUCCESS, game.getEntityEnergy(command.sourceId) - command.cost);
+  static getSuccess(game, command) {
+    return CommandResult.fromJS(
+      CommandResultType.SUCCESS
+      , game.getEntityEnergy(command.sourceId) - command.cost
+    );
+  }
+
+  static getReplace(game, command) {
+    return CommandResult.fromJS(
+      CommandResultType.SUCCESS
+      , game.getEntityEnergy(command.sourceId)
+      , command
+    );
+  }
+
+  static getFailure(game, command) {
+    return CommandResult.fromJS(
+      CommandResultType.FAILURE
+      , game.getEntityEnergy(command.sourceId)
+    );
   }
 }
 

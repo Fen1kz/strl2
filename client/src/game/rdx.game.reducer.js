@@ -5,7 +5,6 @@ import {createReducer, switchReducer} from '../util/redux.util';
 
 import CONST_GAME from "./rdx.game._";
 import CONST_INPUT from './input/rdx.input._';
-import CONST_COMMAND from './const.commands';
 
 import {createGameModel} from './model/GameModel';
 import {parseLevel} from './model/GameModel.level-parsing';
