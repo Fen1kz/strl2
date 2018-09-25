@@ -2,6 +2,7 @@ import CommandId from "./CommandId";
 import CommandDataModel from "../CommandDataModel";
 import TraitId from "../traits/TraitId";
 import CommandResult, {CommandResultType} from "./CommandResult";
+import TraitData from "../traits/TraitData";
 
 export default {
   [CommandId.MOVE]: new CommandDataModel({
@@ -15,7 +16,13 @@ export default {
       const tileId = game.getEntityTileId(sourceId);
       const targetTile = game.getTile(targetId);
       const isBlocked = targetTile.elist.some(entityId => game.getEntity(entityId).getTrait(TraitId.Impassable));
+      const interactiveEntityId = targetTile.elist.find(entityId => game.getEntity(entityId).getTrait(TraitId.Interactive));
       if (isBlocked) {
+        if (interactiveEntityId) {
+          const source = game.getEntity(sourceId);
+          const target = game.getEntity(interactiveEntityId);
+          return CommandResult.fromJS(CommandResultType.REPLACE, 0, TraitData[TraitId.Interactive].getAction(game, source, target));
+        }
         return CommandResult.fromJS(CommandResultType.FAILURE);
       }
       return CommandResult.getSuccessfulResult(game, command);
@@ -32,22 +39,22 @@ export default {
   })
   , [CommandId.OPEN]: new CommandDataModel({
     id: CommandId.OPEN
-    , getCommand: (sourceId, cost = 10) => ({
-      id: CommandId.OPEN, cost, sourceId
+    , getCommand: (sourceId, targetId, cost = 10) => ({
+      id: CommandId.OPEN, sourceId, targetId, cost
     })
-    , getEffect: (game, {sourceId}) => {
+    , getEffect: (game, {targetId}) => {
       return game
-        .updateEntity(sourceId, entity => entity.setIn(['traits', TraitId.Impassable], false))
+        .updateEntity(targetId, entity => entity.setIn(['traits', TraitId.Impassable], false))
     }
   })
   , [CommandId.CLOSE]: new CommandDataModel({
     id: CommandId.CLOSE
-    , getCommand: (sourceId, cost = 10) => ({
-      id: CommandId.CLOSE, cost, sourceId
+    , getCommand: (sourceId, targetId, cost = 10) => ({
+      id: CommandId.CLOSE, sourceId, targetId, cost
     })
-    , getEffect: (game, {sourceId}) => {
+    , getEffect: (game, {targetId}) => {
       return game
-        .updateEntity(sourceId, entity => entity.setIn(['traits', TraitId.Impassable], true))
+        .updateEntity(targetId, entity => entity.setIn(['traits', TraitId.Impassable], true))
     }
   })
 }

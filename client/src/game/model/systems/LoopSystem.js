@@ -112,13 +112,12 @@ function entityCommandGetResult(game, command, queue$) {
   if (commandResult.status === CommandResultType.SUCCESS) {
     return Rx.of(action$entityCommandScheduleEffect(command));
   } else if (commandResult.status === CommandResultType.REPLACE) {
-    return entityCommandGetResult(game, commandResult.replace, queue$, onSuccess)
+    return entityCommandGetResult(game, commandResult.replace, queue$)
   } else if (commandResult.status === CommandResultType.FAILURE) {
     return entityCommandRequestActions(game, entityId, queue$)
-      .pipe(op.tap(console.log.bind(null, 'entityCommandGetResult FAILURE 1')),
-        op.concatMap(commands => commands)
-        , op.tap(console.log.bind(null, 'entityCommandGetResult FAILURE 2'))
-        , op.map(command => entityCommandGetResult(game, command, queue$, onSuccess))
+      .pipe(
+        op.concatAll()
+        , op.map(command => entityCommandGetResult(game, command, queue$))
         , op.concatMap(a => Rx.isObservable(a) ? a : Rx.of(a))
       )
   } else {

@@ -37,6 +37,11 @@ createTraitData(TraitId.Impassable, {
 
 createTraitData(TraitId.Interactive, {
   // onAttach: (entity, traitData) => entity
+  defaultData: null
+  , getAction(game, source, target) {
+    const self = target.getTrait(TraitId.Interactive);
+    return TraitData[self].getAction(game, source, target);
+  }
 });
 
 createTraitData(TraitId.Energy, {
@@ -52,8 +57,18 @@ createTraitData(TraitId.GfxRequestText, {
 createTraitData(TraitId.Door, {
   onAttach: (entity, traitData) => entity
     .addTrait(TraitId.Impassable, traitData)
-    .addTrait(TraitId.TextGfx, traitData ? '+' : '-')
-    .addTrait(TraitId.Interactive, {})
+    .addTrait(TraitId.Interactive, TraitId.Door)
+    .addTrait(TraitId.GfxRequestText, TraitId.Door)
+  , getGfx: (entity) => entity.getTrait(TraitId.Impassable) ? '+' : '-'
+  , getAction(game, source, target) {
+    const traitDoor = target.getTrait(TraitId.Door);
+    const traitImpassable = target.getTrait(TraitId.Impassable);
+    if (traitImpassable) {
+      return CommandData[CommandId.OPEN].getCommand(source.id, target.id, 10)
+    } else {
+      return CommandData[CommandId.CLOSE].getCommand(source.id, target.id, 10)
+    }
+  }
 });
 
 createTraitData(TraitId.AutoDoor, {
@@ -88,9 +103,9 @@ createTraitData(TraitId.AutoDoor, {
     const traitAutoDoor = entity.getTrait(TraitId.AutoDoor);
     const traitImpassable = entity.getTrait(TraitId.Impassable);
     if (traitImpassable) {
-      return CommandData[CommandId.OPEN].getCommand(entity.id, traitAutoDoor.get('toOpen'))
+      return CommandData[CommandId.OPEN].getCommand(entity.id, entity.id, traitAutoDoor.get('toOpen'))
     } else {
-      return CommandData[CommandId.CLOSE].getCommand(entity.id, traitAutoDoor.get('toClose'))
+      return CommandData[CommandId.CLOSE].getCommand(entity.id, entity.id, traitAutoDoor.get('toClose'))
     }
   }
 });
