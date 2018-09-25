@@ -1,6 +1,5 @@
 import React from 'react';
 import {connect} from "react-redux";
-import {Spring, Transition} from 'react-spring';
 
 import {CELLSIZE, CELLSIZE2, translateXY} from "./const.game";
 

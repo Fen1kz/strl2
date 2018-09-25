@@ -39,9 +39,7 @@ export default [
     , op.map(action$gameLoopStart)
   )
   , (actions$, state$) => Rx.merge(
-    actions$.pipe(ofType(CONST_INPUT.tileClicked))
-    , actions$.pipe(ofType(CONST_INPUT.entityClicked))
-    , actions$.pipe(ofType(CONST_GAME.gameLoopStart))
+    actions$.pipe(ofType(CONST_GAME.gameLoopStart))
     , actions$.pipe(ofType(CONST_GAME.gameLoopContinue))
     , actions$.pipe(ofType(CONST_GAME.playerCommand))
     , actions$.pipe(ofType(CONST_GAME.entityCommandRequestActions))
