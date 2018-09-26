@@ -8,6 +8,8 @@ export default {
   , gameSpawnPlayer: 'gameSpawnPlayer'
   , gameEvent: 'gameEvent'
   , playerCommand: 'playerCommand'
+  , playerModeChange: 'playerModeChange'
+  , playerCursorMove: 'playerCursorMove'
 
   , entityCommandRequestActions: 'entityCommandRequestActions'
   , entityCommandGetResult: 'entityCommandGetResult'

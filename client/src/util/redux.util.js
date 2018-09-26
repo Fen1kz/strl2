@@ -1,13 +1,5 @@
-export const createReducer = (initialState, lookupTable) =>
+export const createReducer = (initialState, lookupTable, defaultFn = state => state) =>
   (state = initialState, action) =>
     lookupTable[action.type]
       ? lookupTable[action.type](state, action.data)
-      : state;
-
-export const switchReducer = (mapper, lookupTable) => (state, actionData) => {
-  const key = mapper(state, actionData);
-  return ((lookupTable[key])
-    ? lookupTable[key](state, actionData)
-    : state
-  )
-};
+      : defaultFn(state, action);

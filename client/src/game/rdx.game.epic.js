@@ -8,11 +8,10 @@ import CONST_INPUT from "./input/rdx.input._";
 import {
   action$gameLoopStart
   , action$loadLevelComplete
-  , action$gameSpawnPlayer, action$entityAbility
+  , action$gameSpawnPlayer
   , action$gameEvent
 } from './rdx.game.actions';
 import {selectGame, selectQueueFirst, selectPlayer, selectTile} from './rdx.game.selectors';
-import {switchReducer} from "../util/redux.util";
 
 const fps = 1;
 const timeFrameDuration = 1000 / fps;
@@ -38,14 +37,7 @@ export default [
     ofType(CONST_GAME.loadLevelComplete)
     , op.map(action$gameLoopStart)
   )
-  , (actions$, state$) => Rx.merge(
-    actions$.pipe(ofType(CONST_GAME.gameLoopStart))
-    , actions$.pipe(ofType(CONST_GAME.gameLoopContinue))
-    , actions$.pipe(ofType(CONST_GAME.playerCommand))
-    , actions$.pipe(ofType(CONST_GAME.entityCommandRequestActions))
-    , actions$.pipe(ofType(CONST_GAME.entityCommandGetResult))
-    , actions$.pipe(ofType(CONST_GAME.entityCommandApplyEffects))
-  ).pipe(
+  , (actions$, state$) => actions$.pipe(
     op.mergeMap((event) => {
       const game = selectGame(state$.value);
       if (!game.rxEventHandlers.has(event.type)) {

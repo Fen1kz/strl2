@@ -13,5 +13,8 @@ export const getTileId = (x, y) => {
   const id = x + y * LEVEL_HEIGHT;
   return (id >= 0 ? id : null);
 };
+export const getTileIdOffset = (tileId, x, y) => {
+  return getTileId(getTileX(tileId) + x, getTileY(tileId) + y);
+};
 
 export const translateXY = (point) => `${point.x * CELLSIZE}px, ${point.y * CELLSIZE}px`;

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import {Record, List, Map} from 'immutable';
 
-import {createReducer, switchReducer} from '../util/redux.util';
+import {createReducer} from '../util/redux.util';
 
 import CONST_GAME from "./rdx.game._";
 import CONST_INPUT from './input/rdx.input._';
@@ -20,7 +20,7 @@ import {updateViaReduce} from "./model/Model.utils";
 const initialState = createGameModel();
 
 export default createReducer(initialState, {
-  [CONST_GAME.gameLoopStart]: (game, data) => game.onEvent(CONST_GAME.gameLoopStart, data)
+  [CONST_GAME.gameLoopStart]: (game, data) => game.set('running', true)
   , [CONST_GAME.gameLoopContinue]: (game) => {
     const applyEffect = (game, command) => {
       const commandData = CommandData[command.id];
@@ -28,8 +28,8 @@ export default createReducer(initialState, {
         .updateEntity(command.sourceId, entity => entity.updateIn(['traits', TraitId.Energy], energy => energy - command.cost))
     };
     return game
-      .update(updateViaReduce(game.nextTurn, applyEffect))
-      .set('nextTurn', List())
+      .update(updateViaReduce(game.scheduledEffects, applyEffect))
+      .set('scheduledEffects', List())
   }
   , [CONST_GAME.gameLoopEnergy]: (game) => {
     return game.update(updateViaReduce(game.actors, (game, actorId) => {
@@ -40,9 +40,8 @@ export default createReducer(initialState, {
   }
   , [CONST_GAME.loadLevelComplete]: (game, data) => game
     .merge(parseLevel(data))
-  , [CONST_GAME.playerCommand]: (game, data) => game.onEvent(CONST_GAME.playerCommand, data)
   , [CONST_GAME.entityCommandScheduleEffect]: (game, {command}) => {
     return game
-      .update('nextTurn', list => list.push(command));
+      .update('scheduledEffects', list => list.push(command));
   }
-});
+}, (state, action) => state.onEvent(action.type, action.data));

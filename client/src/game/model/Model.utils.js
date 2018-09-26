@@ -33,6 +33,7 @@ export const mixSystems = (...systems) => {
   });
   result.eventHandlers = fromJS(result.eventHandlers);
   result.onEvent = function (eventType, ...eventData) {
+    if (!this.eventHandlers.has(eventType)) return this;
     return this.eventHandlers
       .get(eventType)
       .reduce((res, eventHandler) => {

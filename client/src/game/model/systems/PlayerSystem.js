@@ -10,15 +10,18 @@ import TraitModel from '../TraitModel';
 import TraitId from '../traits/TraitId';
 
 import {selectGame} from "../../rdx.game.selectors";
-import {action$entityCommand, action$playerCommand} from "../../rdx.game.actions";
+import {action$playerCommand} from "../../rdx.game.actions";
 import CommandData from "../commands/CommandData";
 import CommandId from "../commands/CommandId";
+import {PlayerInputMode, PlayerInputModeType} from "../../input/PlayerInputMode";
+import CONST_GAME from "../../rdx.game._";
 
 
 export function PlayerSystem() {
   return {
     camera: new CameraModel()
     , playerId: null
+    , playerMode: PlayerInputMode[PlayerInputModeType.DEFAULT]
     , getPlayer() {
       return this.getEntity(this.playerId)
     }
@@ -38,6 +41,12 @@ export function PlayerSystem() {
         return this
           .update('camera', camera => camera.setTo(this.getEntityTileId(this.playerId)))
       }
+      , [CONST_GAME.playerModeChange] ({modeId, commandFn}) {
+        const playerMode = PlayerInputMode[PlayerInputModeType];
+        return this.set('playerMode'
+          , playerMode.set('commandFn', commandFn)
+        )
+      }
     }
     , rxEvents: {
       [CONST_INPUT.tileClicked] (state, {tileId}) {
@@ -52,6 +61,9 @@ export function PlayerSystem() {
           return Rx.NEVER;
         }
       }
+      // , [CONST_GAME.setMode] () {
+      //
+      // }
     }
   }
 }

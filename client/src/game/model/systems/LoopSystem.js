@@ -30,7 +30,7 @@ export function LoopSystem() {
   // queue$.subscribe(consoleObs('queue$'));
   return {
     running: false
-    , nextTurn: List()
+    , scheduledEffects: List()
     , queue: List()
     , actors: List()
     , getEntityEnergy(entityId) {
@@ -43,16 +43,6 @@ export function LoopSystem() {
             .update('actors', actors => actors.push(entity.id))
         }
         return this;
-      }
-      , [CONST_GAME.gameLoopStart]() {
-        return this.set('running', true);
-      }
-      , [CONST_GAME.gameLoopEnergy]() {
-        return this.update(updateViaReduce(this.actors, (game, actorId) => {
-          return game.updateEntity(actorId, (actor) => {
-            return actor.updateIn(['traits', TraitId.Energy], energy => energy + 5);
-          })
-        }));
       }
       , [CONST_GAME.playerCommand]({command}) {
         queue$.next(command);
@@ -83,7 +73,7 @@ export function LoopSystem() {
                 , op.concatMap(command => entityCommandGetResult(this, command, queue$)
                 )
               )
-            , Rx.of(action$gameLoopContinue())
+            , Rx.of(action$gameLoopContinue()).pipe(op.delay(250))
           )
         }
       }
@@ -93,7 +83,7 @@ export function LoopSystem() {
 
 function entityCommandRequestActions(game, entityId, queue$) {
   const entity = game.getEntity(entityId);
-  const entityCommandArray = entity.getActionHandlers.toArray()
+  const entityCommandArray = entity.getCommandsArray()
     .map(handler => handler(game, entity))
     .filter(command => !!command)
     .map(command => command === TraitId.Player

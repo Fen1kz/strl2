@@ -11,7 +11,7 @@ export class EntityModel extends Record({
   id: null
   , traits: Map()
 
-  , getActionHandlers: void 0
+  , traitCommandHandlers: void 0
 }) {
   static fromJS(js) {
     return new EntityModel(js);
@@ -38,7 +38,7 @@ export class EntityModel extends Record({
       .update(self => trait.onAttach(self, traitData))
       .update(self => {
         if (!trait.getAction) return self;
-        return self.update('getActionHandlers', (list = List()) => list.push(trait.getAction));
+        return self.update('traitCommandHandlers', (list = List()) => list.push(trait.getAction));
       });
   }
 
@@ -48,6 +48,10 @@ export class EntityModel extends Record({
 
   getTrait(traitId) {
     return this.traits.get(traitId);
+  }
+
+  getCommandsArray() {
+    return this.traitCommandHandlers.toArray();
   }
 }
 

@@ -3,14 +3,13 @@ import * as Rx from 'rxjs';
 import * as op from "rxjs/operators";
 import {ofType} from "redux-observable";
 
-import {action$inputIntent} from './rdx.input.actions';
-
-import {action$playerCommand} from "../rdx.game.actions";
+import {action$playerCommand, action$playerModeChange} from "../rdx.game.actions";
 import CommandData from "../model/commands/CommandData";
 import CommandId from "../model/commands/CommandId";
 import {selectGame} from "../rdx.game.selectors";
 import CONST_GAME from "../rdx.game._";
 import CONST_INPUT from "./rdx.input._";
+import {PlayerInputModeType} from "./PlayerInputMode";
 import {getTileId, getTileX, getTileY} from "../const.game";
 
 const Key = {
@@ -18,6 +17,7 @@ const Key = {
   , D: 68
   , A: 65
   , S: 83
+  , E: 69
   , SPACE: 32
 };
 
@@ -34,7 +34,7 @@ const keyCode2inputCommand = {
   , [Key.A]: KeyCommands.LEFT
   , [Key.S]: KeyCommands.DOWN
   , [Key.D]: KeyCommands.RIGHT
-  , [Key.SPACE]: KeyCommands.INTERACT
+  , [Key.E]: KeyCommands.INTERACT
 };
 
 const inputCommand2offset = {
@@ -46,15 +46,9 @@ const inputCommand2offset = {
 
 const moveCommand = (state, inputCommand) => {
   const game = selectGame(state);
-  const player = game.getPlayer(game);
-  const playerTileId = game.getEntityTileId(player.id);
   const offset = inputCommand2offset[inputCommand];
 
-  const tileX = getTileX(playerTileId);
-  const tileY = getTileY(playerTileId);
-  const targetTileId = getTileId(tileX + offset.x, tileY + offset.y);
-  const command = CommandData[CommandId.MOVE].getCommand(player.id, targetTileId);
-  return Rx.of(action$playerCommand(command));
+  return Rx.of(game.playerMode.onCursorMove(state, offset));
 };
 
 const inputCommand2command = {
@@ -62,16 +56,12 @@ const inputCommand2command = {
   , [KeyCommands.LEFT]: moveCommand
   , [KeyCommands.DOWN]: moveCommand
   , [KeyCommands.RIGHT]: moveCommand
-  , [KeyCommands.SPACE]: (state) => {
+  , [KeyCommands.INTERACT]: (state) => {
     const game = selectGame(state);
-    const player = game.getPlayer(game);
-    const playerTileId = game.getEntityTileId(player.id);
-    const offset = inputCommand2offset[inputCommand];
-
-    const tileX = getTileX(playerTileId);
-    const tileY = getTileY(playerTileId);
-    const targetTileId = getTileId(tileX + offset.x, tileY + offset.y);
-    const command = CommandData[CommandId.MOVE].getCommand(player.id, targetTileId);
+    const sourceId = game.playerId;
+    return Rx.of(action$playerModeChange(
+      PlayerInputModeType.TARGET_NEAR
+      , (targetId) => CommandData[CommandId.INTERACT].getCommand(sourceId, targetId)));
   }
 };
 

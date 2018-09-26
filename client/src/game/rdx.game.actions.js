@@ -12,11 +12,6 @@ export const action$gameLoopEnergy = () => ({
   type: CONST_GAME.gameLoopEnergy
 });
 
-export const action$gameLoopExecute = (actions) => ({
-  type: CONST_GAME.gameLoopExecute
-  , data: actions
-});
-
 export const action$gameLoopStop = () => ({
   type: CONST_GAME.gameLoopStop
 });
@@ -39,11 +34,6 @@ export const action$gameEvent = (event) => ({
   , data: {eventType: event.type, data: event.data}
 });
 
-export const action$playerCommand = (command) => ({
-  type: CONST_GAME.playerCommand
-  , data: {command}
-});
-
 export const action$entityCommandRequestActions = (entityId) => ({
   type: CONST_GAME.entityCommandRequestActions
   , data: {entityId}
@@ -61,4 +51,23 @@ export const action$entityCommandScheduleEffect = (command) => ({
 
 export const action$entityCommandApplyEffects = () => ({
   type: CONST_GAME.entityCommandApplyEffects
+});
+
+/*
+* Player
+* */
+
+export const action$playerCommand = (command) => ({
+  type: CONST_GAME.playerCommand
+  , data: {command}
+});
+
+export const action$playerModeChange = (modeId, commandFn) => ({
+  type: CONST_GAME.playerModeChange
+  , data: {modeId, commandFn}
+});
+
+export const action$playerCursorMove = (tileId) => ({
+  type: CONST_GAME.playerCursorMove
+  , data: {tileId}
 });

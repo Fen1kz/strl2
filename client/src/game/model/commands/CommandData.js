@@ -37,28 +37,6 @@ export default {
         .onEvent('onPlayerMove')
     }
   })
-  , [CommandId.TARGET]: CommandDataModel.fromJS({
-    id: CommandId.TARGET
-    , getCommand: (sourceId, mode) => ({
-      id: CommandId.TARGET, cost: 0, sourceId, mode
-    })
-    , getResult: CommandResult.getSuccess
-    , getEffect: (game, {sourceId, mode}) => {
-      return game
-        .set('mode', mode)
-    }
-  })
-  , [CommandId.TARGET_CANCEL]: CommandDataModel.fromJS({
-    id: CommandId.TARGET_CANCEL
-    , getCommand: (sourceId, mode) => ({
-      id: CommandId.TARGET_CANCEL, cost: 0, sourceId
-    })
-    , getResult: CommandResult.getSuccess
-    , getEffect: (game, {sourceId, mode}) => {
-      return game
-        .set('mode', null)
-    }
-  })
   , [CommandId.INTERACT]: CommandDataModel.fromJS({
     id: CommandId.INTERACT
     , getCommand: (sourceId, targetId) => ({
@@ -67,7 +45,7 @@ export default {
     , getResult: (game, command) => {
       const {sourceId, targetId} = command;
       const source = game.getEntity(sourceId);
-      const target = game.getEntity(interactiveEntityId);
+      const target = game.getEntity(targetId);
       return CommandResult.fromJS(CommandResultType.REPLACE
         , 0
         , TraitData[TraitId.Interactive].getAction(game, source, target));
