@@ -14,6 +14,9 @@ export function EntitySystem () {
     , getEntity(entityId) {
       return this.getIn(['emap', entityId]);
     }
+    , getEntityTrait(entityId, traitId) {
+      return this.getEntity(entityId).traits.get(traitId);
+    }
     , updateEntity(entityId, updateFn) {
       return this.updateIn(['emap', entityId], updateFn)
     }

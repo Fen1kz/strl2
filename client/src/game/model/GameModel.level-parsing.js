@@ -30,6 +30,9 @@ export const parseLevel = (data) => {
     , '+': {
       [TraitId.Door]: true
     }
+    , 'O': {
+      [TraitId.Crate]: {}
+    }
   };
 
   const map = data.map.split('\n')

@@ -11,6 +11,7 @@ import CONST_GAME from "../rdx.game._";
 import CONST_INPUT from "./rdx.input._";
 import {PlayerInputModeType} from "./PlayerInputMode";
 import {getTileId, getTileX, getTileY} from "../const.game";
+import TraitId from "../model/traits/TraitId";
 
 const Key = {
   W: 87
@@ -48,7 +49,7 @@ const moveCommand = (state, inputCommand) => {
   const game = selectGame(state);
   const offset = inputCommand2offset[inputCommand];
 
-  return Rx.of(game.playerMode.onCursorMove(state, offset));
+  return game.playerMode.onCursorMove(state, offset);
 };
 
 const inputCommand2command = {
@@ -61,7 +62,9 @@ const inputCommand2command = {
     const sourceId = game.playerId;
     return Rx.of(action$playerModeChange(
       PlayerInputModeType.TARGET_NEAR
-      , (targetId) => CommandData[CommandId.INTERACT].getCommand(sourceId, targetId)));
+      , (game, targetId) => {
+        return CommandData[CommandId.INTERACT].getCommand(sourceId, targetId);
+      }));
   }
 };
 

@@ -15,15 +15,19 @@ export default {
       const {sourceId, targetId} = command;
       const tileId = game.getEntityTileId(sourceId);
       const targetTile = game.getTile(targetId);
-      const isBlocked = targetTile.elist.some(entityId => game.getEntity(entityId).getTrait(TraitId.Impassable));
-      const interactiveEntityId = targetTile.elist.find(entityId => game.getEntity(entityId).getTrait(TraitId.Interactive));
-      if (isBlocked) {
-        if (interactiveEntityId) {
+      const entityIdImpassable = game
+        .findEntityIdInTile(targetId, eid => game.getEntityTrait(eid, TraitId.Impassable));
+      const entityIdInteractive = game
+        .findEntityIdInTile(targetId, eid => game.getEntityTrait(eid, TraitId.Interactive));
+      if (entityIdImpassable) {
+        if (entityIdInteractive) {
           const source = game.getEntity(sourceId);
-          const target = game.getEntity(interactiveEntityId);
-          return CommandResult.fromJS(CommandResultType.REPLACE, 0, TraitData[TraitId.Interactive].getAction(game, source, target));
+          const target = game.getEntity(entityIdInteractive);
+          return CommandResult.fromJS(CommandResultType.REPLACE
+            , 0
+            , TraitData[TraitId.Interactive].getAction(game, source, target));
         }
-        return CommandResult.fromJS(CommandResultType.FAILURE);
+        return CommandResult.getFailure(CommandResultType.FAILURE);
       }
       return CommandResult.getSuccess(game, command);
     }

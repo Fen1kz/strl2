@@ -8,4 +8,7 @@ export default {
   , Door: 'Door'
   , AutoDoor: 'AutoDoor'
   , Interactive: 'Interactive'
+
+  , PhysItem: 'PhysItem'
+  , Crate: 'Crate'
 };

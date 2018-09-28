@@ -110,4 +110,14 @@ createTraitData(TraitId.AutoDoor, {
   }
 });
 
+
+createTraitData(TraitId.Crate, {
+  onAttach: (entity) => entity
+    .addTrait(TraitId.TextGfx, 'O')
+    .addTrait(TraitId.PhysItem, null)
+    .addTrait(TraitId.Impassable, true)
+});
+createTraitData(TraitId.PhysItem, {
+});
+
 export default TraitData;

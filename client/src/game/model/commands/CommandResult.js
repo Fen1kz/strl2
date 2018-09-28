@@ -8,10 +8,10 @@ export const CommandResultType = {
 
 export class CommandResult extends Record({
   status: null
-  , energy: null
+  , energy: 0
   , replace: null
 }) {
-  static fromJS(status, energy, replace = null) {
+  static fromJS(status, energy = 0, replace = null) {
     return new CommandResult({
       status
       , energy
@@ -34,10 +34,9 @@ export class CommandResult extends Record({
     );
   }
 
-  static getFailure(game, command) {
+  static getFailure(game) {
     return CommandResult.fromJS(
       CommandResultType.FAILURE
-      , game.getEntityEnergy(command.sourceId)
     );
   }
 }

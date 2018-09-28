@@ -42,9 +42,11 @@ export function PlayerSystem() {
           .update('camera', camera => camera.setTo(this.getEntityTileId(this.playerId)))
       }
       , [CONST_GAME.playerModeChange] ({modeId, commandFn}) {
-        const playerMode = PlayerInputMode[PlayerInputModeType];
+        const playerMode = PlayerInputMode[modeId];
         return this.set('playerMode'
-          , playerMode.set('commandFn', commandFn)
+          , playerMode
+            .set('commandFn', commandFn)
+            .set('cursor', this.getEntityTileId(this.playerId))
         )
       }
     }
@@ -61,9 +63,6 @@ export function PlayerSystem() {
           return Rx.NEVER;
         }
       }
-      // , [CONST_GAME.setMode] () {
-      //
-      // }
     }
   }
 }
