@@ -4,6 +4,7 @@ import CommandResult, {CommandResultType} from "./commands/CommandResult";
 
 export class CommandDataModel extends Record({
   id: null
+  , targetType: null
   , getCommand: null
   , resultByTrait: Map()
   , getEffect: null

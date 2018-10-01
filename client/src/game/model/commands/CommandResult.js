@@ -10,7 +10,7 @@ export class CommandResult extends Record({
   status: null
   , replace: null
 }) {
-  static fromJS(status, energy = 0, replace = null) {
+  static fromJS(status, replace = null) {
     return new CommandResult({
       status
       , replace
@@ -25,7 +25,7 @@ export class CommandResult extends Record({
 
   static getReplace(command) {
     return CommandResult.fromJS(
-      CommandResultType.SUCCESS
+      CommandResultType.REPLACE
       , command
     );
   }

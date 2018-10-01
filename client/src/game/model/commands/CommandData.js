@@ -20,9 +20,11 @@ const CommandData = {
     })
     , resultByTrait: {
       [TraitId.Impassable]: (game, command, trait, sourceId, targetId) =>
-        !trait ? CommandResult.getSuccess(game, command) : CommandResult.getFailure()
+        !trait ? CommandResult.getSuccess() : CommandResult.getFailure()
       , [TraitId.Interactive]: (game, command, trait, sourceId, targetId) =>
-        CommandResult.getReplace(game, CommandData[CommandId.INTERACT].getCommand(sourceId, targetId))
+        CommandResult.getReplace(
+          CommandData[CommandId.INTERACT].getCommand(sourceId, targetId)
+        )
     }
     , getEffect: (game, {sourceId, targetId}) => {
       const tileId = game.getEntityTileId(sourceId);
@@ -36,23 +38,14 @@ const CommandData = {
   })
   , [CommandId.INTERACT]: CommandDataModel.fromJS({
     id: CommandId.INTERACT
+    , targetType: CommandTargetType.ENTITY
     , getCommand: (sourceId, targetId) => ({
-      id: CommandId.INTERACT, cost: 0, sourceId, targetId
+      id: CommandId.INTERACT, cost: 10, sourceId, targetId
     })
-    , resultByTrait: {
-      [TraitId.Interactive]: (game, command, trait, sourceId, targetId) => CommandResult.getReplace(game, CommandData[CommandId.INTERACT].getCommand(sourceId, targetId))
-    }
-    , getResult: (game, command) => {
-      const {sourceId, targetId} = command;
-      const source = game.getEntity(sourceId);
-      const target = game.getEntity(targetId);
-      return CommandResult.fromJS(CommandResultType.REPLACE
-        , 0
-        , TraitData[TraitId.Interactive].requestCommand(game, source, target));
-    }
   })
   , [CommandId.SWITCH]: CommandDataModel.fromJS({
     id: CommandId.SWITCH
+    , targetType: CommandTargetType.ENTITY
     , getCommand: (sourceId, targetId, cost = 10) => ({
       id: CommandId.SWITCH, sourceId, targetId, cost
     })
@@ -63,6 +56,7 @@ const CommandData = {
   })
   , [CommandId.OPEN]: CommandDataModel.fromJS({
     id: CommandId.OPEN
+    , targetType: CommandTargetType.ENTITY
     , getCommand: (sourceId, targetId, cost = 10) => ({
       id: CommandId.OPEN, sourceId, targetId, cost
     })
@@ -73,6 +67,7 @@ const CommandData = {
   })
   , [CommandId.CLOSE]: CommandDataModel.fromJS({
     id: CommandId.CLOSE
+    , targetType: CommandTargetType.ENTITY
     , getCommand: (sourceId, targetId, cost = 10) => ({
       id: CommandId.CLOSE, sourceId, targetId, cost
     })

@@ -18,6 +18,7 @@ import {
 } from "../../rdx.game.actions";
 import CommandData, {CommandTargetType} from "../commands/CommandData";
 import {CommandResultType} from "../commands/CommandResult";
+import CommandResult from "../commands/CommandResult";
 
 const consoleObs = (name) => ({
   next: v => console.log(name, v)
@@ -95,24 +96,75 @@ function entityCommandRequestActions(game, entityId, queue$) {
     : Rx.forkJoin(entityCommandArray))
 }
 
+function getCommandResultByEntity(game, command, entityId) {
+  const commandData = CommandData[command.id];
+  let resultSuccess = true;
+  let resultReplace = null;
+  game.getEntity(entityId).traits
+    .some((traitValue, traitId) => {
+      const resultByTraitFn = commandData.resultByTrait[traitId];
+      if (resultByTraitFn) {
+        const result = resultByTraitFn(game, command, traitValue, command.sourceId, entityId);
+        if (result.status === CommandResultType.FAILURE) {
+          resultSuccess = false;
+        } else if (result.status === CommandResultType.REPLACE) {
+          resultReplace = result;
+        }
+        return (!resultSuccess && resultReplace);
+      }
+    });
+  if (resultSuccess) {
+    return CommandResult.getSuccess();
+  } else {
+    if (resultReplace) {
+      return resultReplace;
+    } else {
+      return CommandResult.getFailure()
+    }
+  }
+}
+
+function getCommandResultByTile(game, command) {
+  const tileId = command.targetId;
+  let resultSuccess = true;
+  let resultReplace = null;
+  game.getTile(tileId).elist.some(entityId => {
+    const result = getCommandResultByEntity(game, command, entityId);
+    if (result.status === CommandResultType.FAILURE) {
+      resultSuccess = false;
+    } else if (result.status === CommandResultType.REPLACE) {
+      resultSuccess = false;
+      resultReplace = result;
+    }
+    return (!resultSuccess && resultReplace);
+  });
+  if (resultSuccess) {
+    return CommandResult.getSuccess();
+  } else {
+    if (resultReplace) {
+      return resultReplace;
+    } else {
+      return CommandResult.getFailure()
+    }
+  }
+}
+
+function getCommandResult(game, command) {
+  const commandData = CommandData[command.id];
+  if (commandData.targetType === CommandTargetType.TILE) {
+    return getCommandResultByTile(game, command)
+  } else if (commandData.targetType === CommandTargetType.ENTITY) {
+    return getCommandResultByEntity(game, command, command.targetId)
+  } else if (commandData.targetType === CommandTargetType.SELF) {
+    return CommandResult.getSuccess();
+  } else {
+    throw new Error(`Unknown commandData[${commandData.id}].targetType[${commandData.targetType}]`);
+  }
+}
+
 function entityCommandGetResult(game, command, queue$) {
   const entityId = command.sourceId;
-  const commandData = CommandData[command.id];
-
-  const getEntityCommandResult = (game, entityId) => game
-    .getEntity(entityId)
-    .traits
-    .map((traitId, traitValue) => {
-      if (commandData.resultByTrait[traitId])
-    })
-
-  if (commandData.targetType === CommandTargetType.TILE) {
-    const results = game.getTile(command.targetId).elist
-  }
-
-
-
-  const commandResult = commandData.getResult(game, command);
+  const commandResult = getCommandResult(game, command);
   if (commandResult.status === CommandResultType.SUCCESS) {
     return Rx.of(action$entityCommandScheduleEffect(command));
   } else if (commandResult.status === CommandResultType.REPLACE) {
