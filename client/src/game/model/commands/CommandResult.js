@@ -8,33 +8,29 @@ export const CommandResultType = {
 
 export class CommandResult extends Record({
   status: null
-  , energy: 0
   , replace: null
 }) {
   static fromJS(status, energy = 0, replace = null) {
     return new CommandResult({
       status
-      , energy
       , replace
     });
   }
 
-  static getSuccess(game, command) {
+  static getSuccess() {
     return CommandResult.fromJS(
       CommandResultType.SUCCESS
-      , game.getEntityEnergy(command.sourceId) - command.cost
     );
   }
 
-  static getReplace(game, command) {
+  static getReplace(command) {
     return CommandResult.fromJS(
       CommandResultType.SUCCESS
-      , game.getEntityEnergy(command.sourceId)
       , command
     );
   }
 
-  static getFailure(game) {
+  static getFailure() {
     return CommandResult.fromJS(
       CommandResultType.FAILURE
     );

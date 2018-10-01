@@ -4,32 +4,25 @@ import TraitId from "../traits/TraitId";
 import CommandResult, {CommandResultType} from "./CommandResult";
 import TraitData from "../traits/TraitData";
 
-export default {
+export const CommandTargetType = {
+  SELF: 'SELF'
+  , TILE: 'TILE'
+  , ENTITY: 'ENTITY'
+};
+
+const CommandData = {
   [CommandId.MOVE]: CommandDataModel.fromJS({
     id: CommandId.MOVE
+    , targetType: CommandTargetType.TILE
     , getCommand: (sourceId, targetId, cost = 10) => ({
       id: CommandId.MOVE, cost, sourceId
       , targetId
     })
-    , getResult: (game, command) => {
-      const {sourceId, targetId} = command;
-      const tileId = game.getEntityTileId(sourceId);
-      const targetTile = game.getTile(targetId);
-      const entityIdImpassable = game
-        .findEntityIdInTile(targetId, eid => game.getEntityTrait(eid, TraitId.Impassable));
-      const entityIdInteractive = game
-        .findEntityIdInTile(targetId, eid => game.getEntityTrait(eid, TraitId.Interactive));
-      if (entityIdImpassable) {
-        if (entityIdInteractive) {
-          const source = game.getEntity(sourceId);
-          const target = game.getEntity(entityIdInteractive);
-          return CommandResult.fromJS(CommandResultType.REPLACE
-            , 0
-            , TraitData[TraitId.Interactive].getAction(game, source, target));
-        }
-        return CommandResult.getFailure(CommandResultType.FAILURE);
-      }
-      return CommandResult.getSuccess(game, command);
+    , resultByTrait: {
+      [TraitId.Impassable]: (game, command, trait, sourceId, targetId) =>
+        !trait ? CommandResult.getSuccess(game, command) : CommandResult.getFailure()
+      , [TraitId.Interactive]: (game, command, trait, sourceId, targetId) =>
+        CommandResult.getReplace(game, CommandData[CommandId.INTERACT].getCommand(sourceId, targetId))
     }
     , getEffect: (game, {sourceId, targetId}) => {
       const tileId = game.getEntityTileId(sourceId);
@@ -46,13 +39,26 @@ export default {
     , getCommand: (sourceId, targetId) => ({
       id: CommandId.INTERACT, cost: 0, sourceId, targetId
     })
+    , resultByTrait: {
+      [TraitId.Interactive]: (game, command, trait, sourceId, targetId) => CommandResult.getReplace(game, CommandData[CommandId.INTERACT].getCommand(sourceId, targetId))
+    }
     , getResult: (game, command) => {
       const {sourceId, targetId} = command;
       const source = game.getEntity(sourceId);
       const target = game.getEntity(targetId);
       return CommandResult.fromJS(CommandResultType.REPLACE
         , 0
-        , TraitData[TraitId.Interactive].getAction(game, source, target));
+        , TraitData[TraitId.Interactive].requestCommand(game, source, target));
+    }
+  })
+  , [CommandId.SWITCH]: CommandDataModel.fromJS({
+    id: CommandId.SWITCH
+    , getCommand: (sourceId, targetId, cost = 10) => ({
+      id: CommandId.SWITCH, sourceId, targetId, cost
+    })
+    , getEffect: (game, {targetId}) => {
+      return game
+        .updateEntity(targetId, entity => entity.setIn(['traits', TraitId.Impassable], false))
     }
   })
   , [CommandId.OPEN]: CommandDataModel.fromJS({
@@ -75,4 +81,6 @@ export default {
         .updateEntity(targetId, entity => entity.setIn(['traits', TraitId.Impassable], true))
     }
   })
-}
+};
+
+export default CommandData;

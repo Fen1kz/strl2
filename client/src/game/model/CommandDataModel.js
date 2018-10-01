@@ -5,11 +5,11 @@ import CommandResult, {CommandResultType} from "./commands/CommandResult";
 export class CommandDataModel extends Record({
   id: null
   , getCommand: null
-  , getResult: CommandResult.getSuccess
+  , resultByTrait: Map()
   , getEffect: null
 }) {
   static fromJS(js) {
-    return new CommandDataModel(js);
+    return new CommandDataModel(js)
   }
 }
 

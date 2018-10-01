@@ -5,7 +5,11 @@ import TraitModel from '../TraitModel';
 import CommandData from "../commands/CommandData";
 import CommandId from "../commands/CommandId";
 
-const TraitData = {};
+const TraitData = {
+  getTrait(traitId) {
+    return this[traitId];
+  }
+};
 
 const createTraitData = (traitId, traitData) => (
   TraitData[traitId] = TraitModel.fromJS(Object.assign({}
@@ -22,7 +26,7 @@ createTraitData(TraitId.Player, {
     .addTrait(TraitId.Impassable, true)
     .addTrait(TraitId.Energy, 0)
     .addTrait(TraitId.TextGfx, '@')
-  , getAction(game, entity) {
+  , requestCommand(game, entity) {
     if (!game.queue.isEmpty()) {
       return game.queue.first();
     } else {
@@ -33,15 +37,14 @@ createTraitData(TraitId.Player, {
 
 createTraitData(TraitId.Impassable, {
   // onAttach: (entity, traitData) => entity
+  // commandResult: {
+  //   [CommandId.MOVE]: (game, {targetId}) => {}
+  // }
 });
 
 createTraitData(TraitId.Interactive, {
   // onAttach: (entity, traitData) => entity
   defaultData: null
-  , getAction(game, source, target) {
-    const self = target.getTrait(TraitId.Interactive);
-    return TraitData[self].getAction(game, source, target);
-  }
 });
 
 createTraitData(TraitId.Energy, {
@@ -60,7 +63,7 @@ createTraitData(TraitId.Door, {
     .addTrait(TraitId.Interactive, TraitId.Door)
     .addTrait(TraitId.GfxRequestText, TraitId.Door)
   , getGfx: (entity) => entity.getTrait(TraitId.Impassable) ? '+' : '-'
-  , getAction(game, source, target) {
+  , requestCommand(game, source, target) {
     const traitDoor = target.getTrait(TraitId.Door);
     const traitImpassable = target.getTrait(TraitId.Impassable);
     if (traitImpassable) {
@@ -99,7 +102,7 @@ createTraitData(TraitId.AutoDoor, {
       return '|';
     }
   }
-  , getAction(game, entity) {
+  , requestCommand(game, entity) {
     const traitAutoDoor = entity.getTrait(TraitId.AutoDoor);
     const traitImpassable = entity.getTrait(TraitId.Impassable);
     if (traitImpassable) {

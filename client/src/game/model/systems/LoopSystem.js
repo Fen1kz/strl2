@@ -16,7 +16,7 @@ import {
   , action$entityCommandScheduleEffect
   , action$entityCommandApplyEffects
 } from "../../rdx.game.actions";
-import CommandData from "../commands/CommandData";
+import CommandData, {CommandTargetType} from "../commands/CommandData";
 import {CommandResultType} from "../commands/CommandResult";
 
 const consoleObs = (name) => ({
@@ -73,7 +73,7 @@ export function LoopSystem() {
                 , op.concatMap(command => entityCommandGetResult(this, command, queue$)
                 )
               )
-            , Rx.of(action$gameLoopContinue()).pipe(op.delay(250))
+            , Rx.of(action$gameLoopContinue())
           )
         }
       }
@@ -98,6 +98,20 @@ function entityCommandRequestActions(game, entityId, queue$) {
 function entityCommandGetResult(game, command, queue$) {
   const entityId = command.sourceId;
   const commandData = CommandData[command.id];
+
+  const getEntityCommandResult = (game, entityId) => game
+    .getEntity(entityId)
+    .traits
+    .map((traitId, traitValue) => {
+      if (commandData.resultByTrait[traitId])
+    })
+
+  if (commandData.targetType === CommandTargetType.TILE) {
+    const results = game.getTile(command.targetId).elist
+  }
+
+
+
   const commandResult = commandData.getResult(game, command);
   if (commandResult.status === CommandResultType.SUCCESS) {
     return Rx.of(action$entityCommandScheduleEffect(command));

@@ -37,8 +37,8 @@ export class EntityModel extends Record({
     return this.setIn(['traits', traitId], traitData)
       .update(self => trait.onAttach(self, traitData))
       .update(self => {
-        if (!trait.getAction) return self;
-        return self.update('traitCommandHandlers', (list = List()) => list.push(trait.getAction));
+        if (!trait.requestCommand) return self;
+        return self.update('traitCommandHandlers', (list = List()) => list.push(trait.requestCommand));
       });
   }
 
