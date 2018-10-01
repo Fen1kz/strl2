@@ -63,13 +63,14 @@ createTraitData(TraitId.Door, {
     .addTrait(TraitId.Interactive, TraitId.Door)
     .addTrait(TraitId.GfxRequestText, TraitId.Door)
   , getGfx: (entity) => entity.getTrait(TraitId.Impassable) ? '+' : '-'
-  , requestCommand(game, source, target) {
-    const traitDoor = target.getTrait(TraitId.Door);
-    const traitImpassable = target.getTrait(TraitId.Impassable);
-    if (traitImpassable) {
-      return CommandData[CommandId.OPEN].getCommand(source.id, target.id, 10)
-    } else {
-      return CommandData[CommandId.CLOSE].getCommand(source.id, target.id, 10)
+  , onCommand: {
+    [CommandId.INTERACT]: (game, sourceId, targetId) => {
+      const traitImpassable = game.getEntityTrait(targetId, TraitId.Impassable);
+      if (traitImpassable) {
+        return CommandData[CommandId.OPEN].getCommand(sourceId, targetId, 10)
+      } else {
+        return CommandData[CommandId.CLOSE].getCommand(sourceId, targetId, 10)
+      }
     }
   }
 });
@@ -120,6 +121,7 @@ createTraitData(TraitId.Crate, {
     .addTrait(TraitId.PhysItem, null)
     .addTrait(TraitId.Impassable, true)
 });
+
 createTraitData(TraitId.PhysItem, {
 });
 

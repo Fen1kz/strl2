@@ -3,6 +3,7 @@ import CommandDataModel from "../CommandDataModel";
 import TraitId from "../traits/TraitId";
 import CommandResult, {CommandResultType} from "./CommandResult";
 import TraitData from "../traits/TraitData";
+import {getTileIdOffset, getTileX, getTileY} from "../../const.game";
 
 export const CommandTargetType = {
   SELF: 'SELF'
@@ -25,6 +26,23 @@ const CommandData = {
         CommandResult.getReplace(
           CommandData[CommandId.INTERACT].getCommand(sourceId, targetId)
         )
+      , [TraitId.PhysItem]: (game, command, trait, sourceId, targetId) => {
+        const source = game.getEntity(sourceId);
+        const sourceTileId = game.getEntityTileId(sourceId);
+        const target = game.getEntity(targetId);
+        const targetTileId = game.getEntityTileId(targetId);
+        const offsetX = getTileX(targetTileId) - getTileX(sourceTileId);
+        const offsetY = getTileY(targetTileId) - getTileY(sourceTileId);
+        const nextTileId = getTileIdOffset(targetTileId, offsetX, offsetY);
+        const isBlocked = game.getTile(nextTileId).elist.some(eid => game.getEntityTrait(eid, TraitId.Impassable));
+        if (isBlocked) {
+          return CommandResult.getFailure();
+        }
+        return CommandResult.getReplace(
+          CommandData[CommandId.FORCE_MOVE].getCommand(sourceId, targetTileId)
+          , CommandData[CommandId.FORCE_MOVE].getCommand(targetId, nextTileId)
+        )
+      }
     }
     , getEffect: (game, {sourceId, targetId}) => {
       const tileId = game.getEntityTileId(sourceId);
@@ -39,6 +57,12 @@ const CommandData = {
   , [CommandId.INTERACT]: CommandDataModel.fromJS({
     id: CommandId.INTERACT
     , targetType: CommandTargetType.ENTITY
+    , resultByTrait: {
+      [TraitId.Interactive]: (game, command, traitValue, sourceId, targetId) =>
+        CommandResult.getReplace(
+          TraitData[traitValue].onCommand[CommandId.INTERACT](game, sourceId, targetId)
+        )
+    }
     , getCommand: (sourceId, targetId) => ({
       id: CommandId.INTERACT, cost: 10, sourceId, targetId
     })
