@@ -4,11 +4,13 @@ import TraitId from "../traits/TraitId";
 import CommandResult, {CommandResultType} from "./CommandResult";
 import TraitData from "../traits/TraitData";
 import {getTileIdOffset, getTileX, getTileY} from "../../const.game";
+import {updateViaReduce} from "../Model.utils";
 
 export const CommandTargetType = {
   SELF: 'SELF'
   , TILE: 'TILE'
   , ENTITY: 'ENTITY'
+  , COMBINED: 'COMBINED'
 };
 
 const CommandData = {
@@ -39,8 +41,10 @@ const CommandData = {
           return CommandResult.getFailure();
         }
         return CommandResult.getReplace(
-          CommandData[CommandId.FORCE_MOVE].getCommand(sourceId, targetTileId)
-          , CommandData[CommandId.FORCE_MOVE].getCommand(targetId, nextTileId)
+          CommandData[CommandId.COMBINED].getCommand(
+            CommandData[CommandId.MOVE].getCommand(sourceId, targetTileId)
+            , CommandData[CommandId.MOVE].getCommand(targetId, nextTileId)
+          )
         )
       }
     }
@@ -51,12 +55,30 @@ const CommandData = {
         .updateEntity(sourceId, entity => entity.setIn(['traits', TraitId.Position], targetId))
         .updateTile(tileId, tile => tile.update('elist', elist => elist.filter(entityId => entityId !== sourceId)))
         .updateTile(targetId, tile => tile.update('elist', elist => elist.push(sourceId)))
-        .onEvent('onPlayerMove')
+        .update(game => {
+          if (sourceId === game.playerId) {
+            return game.onEvent('onPlayerMove')
+          }
+          return game;
+        });
+    }
+  })
+  , [CommandId.COMBINED]: CommandDataModel.fromJS({
+    id: CommandId.COMBINED
+    , targetType: CommandTargetType.COMBINED
+    , getCommand: (...commands) => ({
+      id: CommandId.COMBINED, commands
+    })
+    , getEffect: (game, {commands}) => {
+      return game.update(updateViaReduce(commands, (game, command) => {
+        return CommandData[command.id].getEffect(game, command);
+      }));
     }
   })
   , [CommandId.INTERACT]: CommandDataModel.fromJS({
     id: CommandId.INTERACT
     , targetType: CommandTargetType.ENTITY
+    , resultDefault: CommandResult.getFailure()
     , resultByTrait: {
       [TraitId.Interactive]: (game, command, traitValue, sourceId, targetId) =>
         CommandResult.getReplace(
@@ -66,6 +88,9 @@ const CommandData = {
     , getCommand: (sourceId, targetId) => ({
       id: CommandId.INTERACT, cost: 10, sourceId, targetId
     })
+    // , getEffect: (game, command) => {
+    //   return TraitData[traitValue].onCommand[CommandId.INTERACT](game, sourceId, targetId)
+    // }
   })
   , [CommandId.SWITCH]: CommandDataModel.fromJS({
     id: CommandId.SWITCH

@@ -5,4 +5,5 @@ export default {
   , TARGET: 'TARGET'
   , TARGET_CANCEL: 'TARGET_CANCEL'
   , INTERACT: 'INTERACT'
+  , COMBINED: 'COMBINED'
 }

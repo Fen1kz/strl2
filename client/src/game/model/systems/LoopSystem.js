@@ -98,7 +98,7 @@ function entityCommandRequestActions(game, entityId, queue$) {
 
 function getCommandResultByEntity(game, command, entityId) {
   const commandData = CommandData[command.id];
-  let resultSuccess = true;
+  let resultSuccess = commandData.resultDefault.status === CommandResultType.SUCCESS;
   let resultReplace = null;
   game.getEntity(entityId).traits
     .some((traitValue, traitId) => {
@@ -156,6 +156,8 @@ function getCommandResult(game, command) {
   } else if (commandData.targetType === CommandTargetType.ENTITY) {
     return getCommandResultByEntity(game, command, command.targetId)
   } else if (commandData.targetType === CommandTargetType.SELF) {
+    return CommandResult.getSuccess();
+  }  else if (commandData.targetType === CommandTargetType.COMBINED) {
     return CommandResult.getSuccess();
   } else {
     throw new Error(`Unknown commandData[${commandData.id}].targetType[${commandData.targetType}]`);

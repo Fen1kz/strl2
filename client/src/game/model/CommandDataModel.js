@@ -6,6 +6,7 @@ export class CommandDataModel extends Record({
   id: null
   , targetType: null
   , getCommand: null
+  , resultDefault: CommandResult.getSuccess()
   , resultByTrait: Map()
   , getEffect: null
 }) {

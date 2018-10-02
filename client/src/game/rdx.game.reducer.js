@@ -11,7 +11,7 @@ import {parseLevel} from './model/GameModel.level-parsing';
 import {PlayerSystem} from './model/systems/PlayerSystem';
 import TraitId from './model/traits/TraitId';
 import {action$gameLoopExecute} from "./rdx.game.actions";
-import CommandData from "./model/commands/CommandData";
+import CommandData, {CommandTargetType} from "./model/commands/CommandData";
 import {updateViaReduce} from "./model/Model.utils";
 // import PlayerModel from './model/PlayerModel.js'
 // import {ABILITY, ABILITY_TARGET_TYPE, ENTITY_TRAIT, TRAIT_TYPE} from "./model/EntityModel";
@@ -24,8 +24,12 @@ export default createReducer(initialState, {
   , [CONST_GAME.gameLoopContinue]: (game) => {
     const applyEffect = (game, command) => {
       const commandData = CommandData[command.id];
-      return commandData.getEffect(game, command)
-        .updateEntity(command.sourceId, entity => entity.updateIn(['traits', TraitId.Energy], energy => energy - command.cost))
+      if (commandData.targetType !== CommandTargetType.COMBINED) {
+        return commandData.getEffect(game, command)
+          .updateEntity(command.sourceId, entity => entity.updateIn(['traits', TraitId.Energy], energy => energy - command.cost));
+      } else {
+        return commandData.getEffect(game, command);
+      }
     };
     return game
       .update(updateViaReduce(game.scheduledEffects, applyEffect))
