@@ -24,7 +24,7 @@ export default createReducer(initialState, {
   , [CONST_GAME.gameLoopContinue]: (game) => {
     const applyEffect = (game, command) => {
       const commandData = CommandData[command.id];
-      if (commandData.targetType !== CommandTargetType.COMBINED) {
+      if (command.sourceId && command.cost) {
         return commandData.getEffect(game, command)
           .updateEntity(command.sourceId, entity => entity.updateIn(['traits', TraitId.Energy], energy => energy - command.cost));
       } else {

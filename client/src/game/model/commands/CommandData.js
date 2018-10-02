@@ -42,8 +42,8 @@ const CommandData = {
         }
         return CommandResult.getReplace(
           CommandData[CommandId.COMBINED].getCommand(
-            CommandData[CommandId.MOVE].getCommand(sourceId, targetTileId)
-            , CommandData[CommandId.MOVE].getCommand(targetId, nextTileId)
+            CommandData[CommandId.MOVE].getCommand(sourceId, targetTileId, command.cost * 2)
+            , CommandData[CommandId.MOVE].getCommand(targetId, nextTileId, 0)
           )
         )
       }
@@ -71,7 +71,13 @@ const CommandData = {
     })
     , getEffect: (game, {commands}) => {
       return game.update(updateViaReduce(commands, (game, command) => {
-        return CommandData[command.id].getEffect(game, command);
+        const commandData = CommandData[command.id];
+        if (command.sourceId && command.cost) {
+          return commandData.getEffect(game, command)
+            .updateEntity(command.sourceId, entity => entity.updateIn(['traits', TraitId.Energy], energy => energy - command.cost));
+        } else {
+          return commandData.getEffect(game, command);
+        }
       }));
     }
   })
