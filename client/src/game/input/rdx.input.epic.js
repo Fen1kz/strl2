@@ -70,7 +70,7 @@ const inputCommand2command = {
 
 export default [
   // (actions$, state$) => actions$.pipe(ofType('keyDown')
-  (actions$, state$) => Rx.fromEvent(document, 'keydown').pipe(
+  (actions$, state$) => Rx.fromEvent(document, 'keyup').pipe(
     op.map(e => e.which || e.keyCode || 0)
     , op.map(keyCode => keyCode2inputCommand[keyCode])
     , op.filter(_.identity)

@@ -5,6 +5,7 @@ import CommandResult, {CommandResultType} from "./CommandResult";
 import TraitData from "../traits/TraitData";
 import {getTileIdOffset, getTileX, getTileY} from "../../const.game";
 import {updateViaReduce} from "../Model.utils";
+import {applyCommandEffect, getCommandResult} from "./Command.utils";
 
 export const CommandTargetType = {
   SELF: 'SELF'
@@ -21,29 +22,39 @@ const CommandData = {
       id: CommandId.MOVE, cost, sourceId
       , targetId
     })
+    , resultSelf: (game, command) => {
+
+    }
     , resultByTrait: {
-      [TraitId.Impassable]: (game, command, trait, sourceId, targetId) =>
-        !trait ? CommandResult.getSuccess() : CommandResult.getFailure()
-      , [TraitId.Interactive]: (game, command, trait, sourceId, targetId) =>
-        CommandResult.getReplace(
+      [TraitId.Impassable]: (game, command, trait, sourceId, targetId) => {
+        return !trait ? CommandResult.getSuccess(command) : CommandResult.getFailure(command)
+      }
+      , [TraitId.Interactive]: (game, command, trait, sourceId, targetId) => {
+        return CommandResult.getReplace(
           CommandData[CommandId.INTERACT].getCommand(sourceId, targetId)
         )
+      }
       , [TraitId.PhysItem]: (game, command, trait, sourceId, targetId) => {
         const source = game.getEntity(sourceId);
+        if (!source.hasTrait(TraitId.StatStrength)) {
+          return CommandResult.getFailure(command);
+        }
         const sourceTileId = game.getEntityTileId(sourceId);
         const target = game.getEntity(targetId);
         const targetTileId = game.getEntityTileId(targetId);
         const offsetX = getTileX(targetTileId) - getTileX(sourceTileId);
         const offsetY = getTileY(targetTileId) - getTileY(sourceTileId);
         const nextTileId = getTileIdOffset(targetTileId, offsetX, offsetY);
-        const isBlocked = game.getTile(nextTileId).elist.some(eid => game.getEntityTrait(eid, TraitId.Impassable));
-        if (isBlocked) {
-          return CommandResult.getFailure();
+
+        const pushCommand = CommandData[CommandId.MOVE].getCommand(targetId, nextTileId, 0);
+        const pushCommandResult = getCommandResult(game, pushCommand);
+        if (pushCommandResult.status === CommandResultType.FAILURE) {
+          return CommandResult.getFailure(command);
         }
         return CommandResult.getReplace(
           CommandData[CommandId.COMBINED].getCommand(
-            CommandData[CommandId.MOVE].getCommand(sourceId, targetTileId, command.cost * 2)
-            , CommandData[CommandId.MOVE].getCommand(targetId, nextTileId, 0)
+            pushCommand
+            , CommandData[CommandId.MOVE].getCommand(sourceId, targetTileId, command.cost * 2)
           )
         )
       }
@@ -70,26 +81,22 @@ const CommandData = {
       id: CommandId.COMBINED, commands
     })
     , getEffect: (game, {commands}) => {
-      return game.update(updateViaReduce(commands, (game, command) => {
-        const commandData = CommandData[command.id];
-        if (command.sourceId && command.cost) {
-          return commandData.getEffect(game, command)
-            .updateEntity(command.sourceId, entity => entity.updateIn(['traits', TraitId.Energy], energy => energy - command.cost));
-        } else {
-          return commandData.getEffect(game, command);
-        }
-      }));
+      return game.update(updateViaReduce(commands, applyCommandEffect));
     }
   })
   , [CommandId.INTERACT]: CommandDataModel.fromJS({
     id: CommandId.INTERACT
     , targetType: CommandTargetType.ENTITY
-    , resultDefault: CommandResult.getFailure()
     , resultByTrait: {
-      [TraitId.Interactive]: (game, command, traitValue, sourceId, targetId) =>
-        CommandResult.getReplace(
+      [TraitId.Interactive]: (game, command, traitValue, sourceId, targetId) => {
+        const source = game.getEntity(sourceId);
+        if (!source.hasTrait(TraitId.AbilityInteract)) {
+          return CommandResult.getFailure(command);
+        }
+        return CommandResult.getReplaceForced(
           TraitData[traitValue].onCommand[CommandId.INTERACT](game, sourceId, targetId)
         )
+      }
     }
     , getCommand: (sourceId, targetId) => ({
       id: CommandId.INTERACT, cost: 10, sourceId, targetId

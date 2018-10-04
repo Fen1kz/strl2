@@ -42,10 +42,10 @@ export class Entity extends React.PureComponent {
       transform: `translate(${translateXY(xy)})`
     }}>
       <EntityText entity={entity}/>
-      {entity.getTrait(TraitId.Energy) !== void 0
-        ? <text y={CELLSIZE2 / 2} className='EntityTextDbg'>{entity.getTrait(TraitId.Energy)}</text>
-        : null
-      }
+      {/*{entity.getTrait(TraitId.Energy) !== void 0*/}
+        {/*? <text y={CELLSIZE2 / 2} className='EntityTextDbg'>{entity.getTrait(TraitId.Energy)}</text>*/}
+        {/*: null*/}
+      {/*}*/}
     </g>);
   }
 }

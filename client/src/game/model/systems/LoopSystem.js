@@ -19,6 +19,7 @@ import {
 import CommandData, {CommandTargetType} from "../commands/CommandData";
 import {CommandResultType} from "../commands/CommandResult";
 import CommandResult from "../commands/CommandResult";
+import {getCommandResult} from "../commands/Command.utils";
 
 const consoleObs = (name) => ({
   next: v => console.log(name, v)
@@ -33,22 +34,30 @@ export function LoopSystem() {
     running: false
     , scheduledEffects: List()
     , queue: List()
-    , actors: List()
+    , animate: false
+    , actors: Map()
     , getEntityEnergy(entityId) {
-      return this.getEntity(entityId).traits.get(TraitId.Energy);
+      return this.actors.get(entityId);
+    }
+    , updateEntityEnergy(entityId, cb) {
+      return this.updateIn(['actors', entityId], cb);
     }
     , events: {
       onEntityAttach(entity) {
         if (entity.hasTrait(TraitId.Energy)) {
-          return this
-            .update('actors', actors => actors.push(entity.id))
+          return this.setIn(['actors', entity.id], 0);
+        }
+        return this;
+      }
+      , onEntityDetach(entity) {
+        if (entity.hasTrait(TraitId.Energy)) {
+          return this.removeIn(['actors', entity.id]);
         }
         return this;
       }
       , [CONST_GAME.playerCommand]({command}) {
         queue$.next(command);
-        return this
-        // .update('queue', queue => queue.push(command));
+        return this;
       }
     }
     , rxEvents: {
@@ -56,7 +65,7 @@ export function LoopSystem() {
         return Rx.of(action$gameLoopContinue());
       }
       , [CONST_GAME.gameLoopContinue]() {
-        const actorsArrayOfCommands = this.actors.toArray()
+        const actorsArrayOfCommands = this.actors.keySeq().toArray()
           .filter(entityId => this.getEntityEnergy(entityId) >= 0)
           .map(entityId => entityCommandRequestActions(this, entityId, queue$));
 
@@ -74,7 +83,7 @@ export function LoopSystem() {
                 , op.concatMap(command => entityCommandGetResult(this, command, queue$)
                 )
               )
-            , Rx.of(action$gameLoopContinue())
+            , Rx.of(action$gameLoopContinue()).pipe(op.delay(100))
           )
         }
       }
@@ -96,90 +105,24 @@ function entityCommandRequestActions(game, entityId, queue$) {
     : Rx.forkJoin(entityCommandArray))
 }
 
-function getCommandResultByEntity(game, command, entityId) {
-  const commandData = CommandData[command.id];
-  let resultSuccess = commandData.resultDefault.status === CommandResultType.SUCCESS;
-  let resultReplace = null;
-  game.getEntity(entityId).traits
-    .some((traitValue, traitId) => {
-      const resultByTraitFn = commandData.resultByTrait[traitId];
-      if (resultByTraitFn) {
-        const result = resultByTraitFn(game, command, traitValue, command.sourceId, entityId);
-        if (result.status === CommandResultType.FAILURE) {
-          resultSuccess = false;
-        } else if (result.status === CommandResultType.REPLACE) {
-          resultReplace = result;
-        }
-        return (!resultSuccess && resultReplace);
-      }
-    });
-  if (resultSuccess) {
-    return CommandResult.getSuccess();
-  } else {
-    if (resultReplace) {
-      return resultReplace;
-    } else {
-      return CommandResult.getFailure()
-    }
-  }
-}
-
-function getCommandResultByTile(game, command) {
-  const tileId = command.targetId;
-  let resultSuccess = true;
-  let resultReplace = null;
-  game.getTile(tileId).elist.some(entityId => {
-    const result = getCommandResultByEntity(game, command, entityId);
-    if (result.status === CommandResultType.FAILURE) {
-      resultSuccess = false;
-    } else if (result.status === CommandResultType.REPLACE) {
-      resultSuccess = false;
-      resultReplace = result;
-    }
-    return (!resultSuccess && resultReplace);
-  });
-  if (resultSuccess) {
-    return CommandResult.getSuccess();
-  } else {
-    if (resultReplace) {
-      return resultReplace;
-    } else {
-      return CommandResult.getFailure()
-    }
-  }
-}
-
-function getCommandResult(game, command) {
-  const commandData = CommandData[command.id];
-  if (commandData.targetType === CommandTargetType.TILE) {
-    return getCommandResultByTile(game, command)
-  } else if (commandData.targetType === CommandTargetType.ENTITY) {
-    return getCommandResultByEntity(game, command, command.targetId)
-  } else if (commandData.targetType === CommandTargetType.SELF) {
-    return CommandResult.getSuccess();
-  }  else if (commandData.targetType === CommandTargetType.COMBINED) {
-    return CommandResult.getSuccess();
-  } else {
-    throw new Error(`Unknown commandData[${commandData.id}].targetType[${commandData.targetType}]`);
-  }
-}
-
 function entityCommandGetResult(game, command, queue$) {
   const entityId = command.sourceId;
   const commandResult = getCommandResult(game, command);
-  if (commandResult.status === CommandResultType.SUCCESS) {
-    return Rx.of(action$entityCommandScheduleEffect(command));
-  } else if (commandResult.status === CommandResultType.REPLACE) {
-    return entityCommandGetResult(game, commandResult.replace, queue$)
-  } else if (commandResult.status === CommandResultType.FAILURE) {
-    return entityCommandRequestActions(game, entityId, queue$)
-      .pipe(
-        op.concatAll()
-        , op.map(command => entityCommandGetResult(game, command, queue$))
-        , op.concatMap(a => Rx.isObservable(a) ? a : Rx.of(a))
-      )
-  } else {
-    console.error(`Invalid commandResult`, commandResult);
-    throw new Error(`Invalid commandResult ${commandResult}`);
+  switch(commandResult.status) {
+    case CommandResultType.SUCCESS:
+      return Rx.of(action$entityCommandScheduleEffect(command));
+    case CommandResultType.REPLACE:
+    case CommandResultType.REPLACE_FORCED:
+      return entityCommandGetResult(game, commandResult.command, queue$);
+    case CommandResultType.FAILURE:
+      return entityCommandRequestActions(game, entityId, queue$)
+        .pipe(
+          op.concatAll()
+          , op.map(command => entityCommandGetResult(game, command, queue$))
+          , op.concatMap(a => Rx.isObservable(a) ? a : Rx.of(a))
+        );
+    default:
+      console.error(`Invalid commandResult`, commandResult);
+      throw new Error(`Invalid commandResult ${commandResult}`);
   }
 }

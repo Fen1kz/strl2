@@ -33,6 +33,12 @@ export const parseLevel = (data) => {
     , 'O': {
       [TraitId.Crate]: {}
     }
+    , 't': {
+      [TraitId.MnstrTargetDummy]: null
+    }
+    , 'z': {
+      [TraitId.MnstrZombie]: null
+    }
   };
 
   const map = data.map.split('\n')

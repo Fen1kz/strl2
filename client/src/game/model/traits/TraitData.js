@@ -26,6 +26,8 @@ createTraitData(TraitId.Player, {
     .addTrait(TraitId.Impassable, true)
     .addTrait(TraitId.Energy, 0)
     .addTrait(TraitId.TextGfx, '@')
+    .addTrait(TraitId.AbilityInteract, null)
+    .addTrait(TraitId.StatStrength, null)
   , requestCommand(game, entity) {
     if (!game.queue.isEmpty()) {
       return game.queue.first();
@@ -40,6 +42,9 @@ createTraitData(TraitId.Impassable, {
   // commandResult: {
   //   [CommandId.MOVE]: (game, {targetId}) => {}
   // }
+});
+
+createTraitData(TraitId.AbilityInteract, {
 });
 
 createTraitData(TraitId.Interactive, {
@@ -77,8 +82,8 @@ createTraitData(TraitId.Door, {
 
 createTraitData(TraitId.AutoDoor, {
   defaultData: {
-    toOpen: 20
-    , toClose: 20
+    toOpen: 40
+    , toClose: 40
     , closed: true
     , orientation: 0
   }
@@ -114,6 +119,8 @@ createTraitData(TraitId.AutoDoor, {
   }
 });
 
+createTraitData(TraitId.StatStrength, {
+});
 
 createTraitData(TraitId.Crate, {
   onAttach: (entity) => entity
@@ -123,6 +130,18 @@ createTraitData(TraitId.Crate, {
 });
 
 createTraitData(TraitId.PhysItem, {
+});
+
+createTraitData(TraitId.MnstrTargetDummy, {
+  onAttach: (entity) => entity
+    .addTrait(TraitId.TextGfx, 't')
+    .addTrait(TraitId.Impassable, true)
+});
+
+createTraitData(TraitId.MnstrZombie, {
+  onAttach: (entity) => entity
+    .addTrait(TraitId.TextGfx, 'z')
+    .addTrait(TraitId.Impassable, true)
 });
 
 export default TraitData;

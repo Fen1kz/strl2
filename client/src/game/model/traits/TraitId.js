@@ -7,8 +7,15 @@ export default {
   , Energy: 'Energy'
   , Door: 'Door'
   , AutoDoor: 'AutoDoor'
+
+  , AbilityInteract: 'AbilityInteract'
   , Interactive: 'Interactive'
 
   , PhysItem: 'PhysItem'
   , Crate: 'Crate'
+
+  , StatStrength: 'StatStrength'
+
+  , MnstrTargetDummy: 'MnstrTargetDummy'
+  , MnstrZombie: 'MnstrZombie'
 };

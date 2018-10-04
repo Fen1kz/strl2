@@ -3,37 +3,36 @@ import {Record} from 'immutable';
 export const CommandResultType = {
   SUCCESS: 'SUCCESS'
   , REPLACE: 'REPLACE'
+  , REPLACE_FORCED: 'REPLACE_FORCED'
+  , UNCLEAR: 'UNCLEAR'
   , FAILURE: 'FAILURE'
 };
 
 export class CommandResult extends Record({
   status: null
-  , replace: null
+  , command: null
 }) {
-  static fromJS(status, replace = null) {
+  static fromJS(status, command = null) {
     return new CommandResult({
       status
-      , replace
+      , command
     });
   }
 
-  static getSuccess() {
-    return CommandResult.fromJS(
-      CommandResultType.SUCCESS
-    );
+  static getSuccess(command) {
+    return CommandResult.fromJS(CommandResultType.SUCCESS, command);
   }
 
   static getReplace(command) {
-    return CommandResult.fromJS(
-      CommandResultType.REPLACE
-      , command
-    );
+    return CommandResult.fromJS(CommandResultType.REPLACE, command);
   }
 
-  static getFailure() {
-    return CommandResult.fromJS(
-      CommandResultType.FAILURE
-    );
+  static getReplaceForced(command) {
+    return CommandResult.fromJS(CommandResultType.REPLACE_FORCED, command);
+  }
+
+  static getFailure(command) {
+    return CommandResult.fromJS(CommandResultType.FAILURE, command);
   }
 }
 
