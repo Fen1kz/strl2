@@ -2,10 +2,11 @@ export default {
   Position: 'TraitPosition'
   , Impassable: 'TraitImpassable'
   , Player: 'Player'
-  , TextGfx: 'TextGfx'
+  , GfxText: 'GfxText'
   , GfxRequestText: 'GfxRequestText'
   , Energy: 'Energy'
   , Door: 'Door'
+  , DoorInteractive: 'DoorInteractive'
   , AutoDoor: 'AutoDoor'
 
   , AbilityInteract: 'AbilityInteract'
@@ -13,6 +14,7 @@ export default {
 
   , PhysItem: 'PhysItem'
   , Crate: 'Crate'
+  , Wire: 'Wire'
 
   , StatStrength: 'StatStrength'
 

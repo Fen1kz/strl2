@@ -21,14 +21,14 @@ export const parseLevel = (data) => {
   const text2trait = {
     '#': {
       [TraitId.Impassable]: true
-      , [TraitId.TextGfx]: '#'
+      , [TraitId.GfxText]: '#'
     }
     , '@': {
       [TraitId.Impassable]: true
       , [TraitId.Player]: true
     }
     , '+': {
-      [TraitId.Door]: true
+      [TraitId.DoorInteractive]: true
     }
     , 'O': {
       [TraitId.Crate]: {}

@@ -12,8 +12,8 @@ export class EntityAutoDoor_ extends React.PureComponent {
 // const connect(EntityAutoDoor
 
 export const EntityText = ({entity}) => {
-  if (entity.hasTrait(TraitId.TextGfx)) {
-    this.text = entity.getTrait(TraitId.TextGfx);
+  if (entity.hasTrait(TraitId.GfxText)) {
+    this.text = entity.getTrait(TraitId.GfxText);
   } else if (entity.hasTrait(TraitId.GfxRequestText)) {
     const requestTraitId = entity.getTrait(TraitId.GfxRequestText);
     this.text = TraitData[requestTraitId].getGfx(entity);

@@ -25,7 +25,7 @@ createTraitData(TraitId.Player, {
   onAttach: (entity) => entity
     .addTrait(TraitId.Impassable, true)
     .addTrait(TraitId.Energy, 0)
-    .addTrait(TraitId.TextGfx, '@')
+    .addTrait(TraitId.GfxText, '@')
     .addTrait(TraitId.AbilityInteract, null)
     .addTrait(TraitId.StatStrength, null)
   , requestCommand(game, entity) {
@@ -56,7 +56,7 @@ createTraitData(TraitId.Energy, {
   // onAttach: (entity, traitData) => entity
 });
 
-createTraitData(TraitId.TextGfx, {
+createTraitData(TraitId.GfxText, {
 });
 
 createTraitData(TraitId.GfxRequestText, {
@@ -65,19 +65,14 @@ createTraitData(TraitId.GfxRequestText, {
 createTraitData(TraitId.Door, {
   onAttach: (entity, traitData) => entity
     .addTrait(TraitId.Impassable, traitData)
-    .addTrait(TraitId.Interactive, TraitId.Door)
     .addTrait(TraitId.GfxRequestText, TraitId.Door)
   , getGfx: (entity) => entity.getTrait(TraitId.Impassable) ? '+' : '-'
-  , onCommand: {
-    [CommandId.INTERACT]: (game, sourceId, targetId) => {
-      const traitImpassable = game.getEntityTrait(targetId, TraitId.Impassable);
-      if (traitImpassable) {
-        return CommandData[CommandId.OPEN].getCommand(sourceId, targetId, 10)
-      } else {
-        return CommandData[CommandId.CLOSE].getCommand(sourceId, targetId, 10)
-      }
-    }
-  }
+});
+
+createTraitData(TraitId.DoorInteractive, {
+  onAttach: (entity, traitData) => entity
+    .addTrait(TraitId.Door, traitData)
+    .addTrait(TraitId.Interactive, CommandId.SWITCH)
 });
 
 createTraitData(TraitId.AutoDoor, {
@@ -111,11 +106,11 @@ createTraitData(TraitId.AutoDoor, {
   , requestCommand(game, entity) {
     const traitAutoDoor = entity.getTrait(TraitId.AutoDoor);
     const traitImpassable = entity.getTrait(TraitId.Impassable);
-    if (traitImpassable) {
-      return CommandData[CommandId.OPEN].getCommand(entity.id, entity.id, traitAutoDoor.get('toOpen'))
-    } else {
-      return CommandData[CommandId.CLOSE].getCommand(entity.id, entity.id, traitAutoDoor.get('toClose'))
-    }
+    return CommandData[CommandId.SWITCH].getCommand(
+      entity.id
+      , entity.id
+      , traitAutoDoor.get(traitImpassable ? 'toOpen' : 'toClose')
+    );
   }
 });
 
@@ -124,7 +119,7 @@ createTraitData(TraitId.StatStrength, {
 
 createTraitData(TraitId.Crate, {
   onAttach: (entity) => entity
-    .addTrait(TraitId.TextGfx, 'O')
+    .addTrait(TraitId.GfxText, 'O')
     .addTrait(TraitId.PhysItem, null)
     .addTrait(TraitId.Impassable, true)
 });
@@ -134,14 +129,17 @@ createTraitData(TraitId.PhysItem, {
 
 createTraitData(TraitId.MnstrTargetDummy, {
   onAttach: (entity) => entity
-    .addTrait(TraitId.TextGfx, 't')
+    .addTrait(TraitId.GfxText, 't')
     .addTrait(TraitId.Impassable, true)
 });
 
 createTraitData(TraitId.MnstrZombie, {
   onAttach: (entity) => entity
-    .addTrait(TraitId.TextGfx, 'z')
+    .addTrait(TraitId.GfxText, 'z')
     .addTrait(TraitId.Impassable, true)
+});
+
+createTraitData(TraitId.Wire, {
 });
 
 export default TraitData;

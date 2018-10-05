@@ -1,5 +1,5 @@
 import _ from "lodash";
-import {Record, Map, List} from "immutable";
+import {Record, Map, List, fromJS} from "immutable";
 import {updateViaReduce} from './Model.utils';
 
 import {getTileId, getTileX, getTileY} from '../const.game';
@@ -17,8 +17,8 @@ export class EntityModel extends Record({
     return new EntityModel(js);
   }
 
-  static fromSeed({xy, traits}) {
-    let entity = (new EntityModel());
+  static fromSeed({id, xy, traits}) {
+    let entity = new EntityModel({id});
     if (xy) {
       const tileId = getTileId(xy[0], xy[1]);
       entity = entity.addTrait(TraitId.Position, tileId)
@@ -31,7 +31,7 @@ export class EntityModel extends Record({
   addTrait(traitId, data) {
     const trait = TraitData[traitId];
     if (!trait) throw new Error(`No trait[${traitId}]`);
-    const traitData = (data instanceof Object) ? Map(Object.assign({}, trait.defaultData, data))
+    const traitData = (data instanceof Object) ? fromJS(Object.assign({}, trait.defaultData, data))
       : data !== void 0 ? data
         : trait.defaultData;
     return this.setIn(['traits', traitId], traitData)

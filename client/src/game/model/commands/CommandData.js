@@ -22,9 +22,6 @@ const CommandData = {
       id: CommandId.MOVE, cost, sourceId
       , targetId
     })
-    , resultSelf: (game, command) => {
-
-    }
     , resultByTrait: {
       [TraitId.Impassable]: (game, command, trait, sourceId, targetId) => {
         return !trait ? CommandResult.getSuccess(command) : CommandResult.getFailure(command)
@@ -93,17 +90,16 @@ const CommandData = {
         if (!source.hasTrait(TraitId.AbilityInteract)) {
           return CommandResult.getFailure(command);
         }
+        const commandReplacement = CommandData[traitValue].getCommand;
         return CommandResult.getReplaceForced(
-          TraitData[traitValue].onCommand[CommandId.INTERACT](game, sourceId, targetId)
+          commandReplacement(sourceId, targetId, command.cost)
         )
       }
     }
     , getCommand: (sourceId, targetId) => ({
       id: CommandId.INTERACT, cost: 10, sourceId, targetId
     })
-    // , getEffect: (game, command) => {
-    //   return TraitData[traitValue].onCommand[CommandId.INTERACT](game, sourceId, targetId)
-    // }
+    , getEffect: g => g
   })
   , [CommandId.SWITCH]: CommandDataModel.fromJS({
     id: CommandId.SWITCH
@@ -113,29 +109,44 @@ const CommandData = {
     })
     , getEffect: (game, {targetId}) => {
       return game
-        .updateEntity(targetId, entity => entity.setIn(['traits', TraitId.Impassable], false))
+        .updateEntity(targetId, entity => entity
+          .updateIn(['traits', TraitId.Impassable], value => !value))
     }
   })
-  , [CommandId.OPEN]: CommandDataModel.fromJS({
-    id: CommandId.OPEN
+  , [CommandId.SIGNAL_EMIT]: CommandDataModel.fromJS({
+    id: CommandId.SIGNAL_EMIT
     , targetType: CommandTargetType.ENTITY
     , getCommand: (sourceId, targetId, cost = 10) => ({
-      id: CommandId.OPEN, sourceId, targetId, cost
+      id: CommandId.SIGNAL_EMIT, sourceId, targetId, cost
     })
-    , getEffect: (game, {targetId}) => {
-      return game
-        .updateEntity(targetId, entity => entity.setIn(['traits', TraitId.Impassable], false))
+    , resultByTrait: {
+      [TraitId.Wire]: (game, command, traitValue, sourceId, targetId) => {
+        return CommandResult.getReplaceForced({
+          id: CommandId.SIGNAL_TRAVERSE
+          , sourceId
+          , targets: traitValue.get('targets')
+          , cost: command.cost
+        })
+      }
     }
+    , getEffect: g => g
   })
-  , [CommandId.CLOSE]: CommandDataModel.fromJS({
-    id: CommandId.CLOSE
-    , targetType: CommandTargetType.ENTITY
-    , getCommand: (sourceId, targetId, cost = 10) => ({
-      id: CommandId.CLOSE, sourceId, targetId, cost
+  , [CommandId.SIGNAL_TRAVERSE]: CommandDataModel.fromJS({
+    id: CommandId.SIGNAL_TRAVERSE
+    , targetType: CommandTargetType.SELF
+    , getCommand: (sourceId, targets, cost = 10) => ({
+      id: CommandId.SIGNAL_TRAVERSE, sourceId, targets, cost
     })
-    , getEffect: (game, {targetId}) => {
-      return game
-        .updateEntity(targetId, entity => entity.setIn(['traits', TraitId.Impassable], true))
+    , getEffect: (game, command) => {
+      return game.update(updateViaReduce(command.targets, (game, targetId) => {
+        const trait = game.getEntityTrait(targetId, TraitId.Wire);
+        const commandId = trait.get('onSignal');
+        const getEffectFn = CommandData[commandId].getEffect;
+        return getEffectFn(game, {
+          sourceId: command.sourceId
+          , targetId
+        });
+      }))
     }
   })
 };

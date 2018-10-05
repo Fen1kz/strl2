@@ -10,7 +10,7 @@ export function getCommandResult(game, command) {
     return getCommandResultByEntity(game, command, command.targetId)
   } else if (commandData.targetType === CommandTargetType.SELF) {
     return CommandResult.getSuccess(command);
-  }  else if (commandData.targetType === CommandTargetType.COMBINED) {
+  } else if (commandData.targetType === CommandTargetType.COMBINED) {
     return CommandResult.getSuccess(command);
   } else {
     throw new Error(`Unknown commandData[${commandData.id}].targetType[${commandData.targetType}]`);
@@ -62,10 +62,14 @@ function getCommandResultByEntity(game, command, entityId) {
 
 function compileCommandResult(resultSuccess, resultReplace) {
   if (resultSuccess) {
+    if (resultReplace) {
+      return CommandResult.getSuccess(resultReplace.command);
+    }
     return CommandResult.getSuccess();
-  }
-  if (resultReplace) {
-    return resultReplace;
+  } else {
+    if (resultReplace) {
+      return resultReplace;
+    }
   }
   return CommandResult.getFailure()
 }
