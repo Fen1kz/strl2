@@ -57,9 +57,9 @@ export const action$entityCommandApplyEffects = () => ({
 * Player
 * */
 
-export const action$playerCommand = (command) => ({
+export const action$playerCommand = (command, interval) => ({
   type: CONST_GAME.playerCommand
-  , data: {command}
+  , data: {command, interval}
 });
 
 export const action$playerModeChange = (modeId, commandFn) => ({

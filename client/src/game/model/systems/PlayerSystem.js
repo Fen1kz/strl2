@@ -51,18 +51,18 @@ export function PlayerSystem() {
       }
     }
     , rxEvents: {
-      [CONST_INPUT.tileClicked] (state, {tileId}) {
-        const game = selectGame(state);
-        const player = game.getPlayer(game);
-        const playerTile = game.getEntityTileId(player.id);
-        const tile = game.getTile(tileId);
-        if (tile.isNext(playerTile)) {
-          const command = CommandData[CommandId.MOVE].getCommand(player.id, tileId);
-          return Rx.of(action$playerCommand(command));
-        } else {
-          return Rx.NEVER;
-        }
-      }
+      // [CONST_INPUT.tileClicked] (state, {tileId}) {
+      //   const game = selectGame(state);
+      //   const player = game.getPlayer(game);
+      //   const playerTile = game.getEntityTileId(player.id);
+      //   const tile = game.getTile(tileId);
+      //   if (tile.isNext(playerTile)) {
+      //     const command = CommandData[CommandId.MOVE].getCommand(player.id, tileId);
+      //     return Rx.of(action$playerCommand(command));
+      //   } else {
+      //     return Rx.NEVER;
+      //   }
+      // }
     }
   }
 }

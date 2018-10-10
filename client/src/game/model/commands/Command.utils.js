@@ -78,13 +78,19 @@ function compileCommandResult(resultSuccess, resultReplace) {
 export function applyCommandEffect(game, command) {
   const commandData = CommandData[command.id];
   const commandResult = getCommandResult(game, command);
-  if (commandResult.status !== CommandResultType.SUCCESS) {
-    return game;
+  let updatedGame = game;
+  if (command.queue) {
+    console.log('FOUND COMMAND WITH QUEUE');
+    console.log(updatedGame.queue.toJS());
+    updatedGame = game.update('queue', queue => queue.shift());
+    console.log(updatedGame.queue.toJS());
   }
-  const updatedGame = commandData.getEffect(game, command);
-  if (command.sourceId && command.cost) {
-    return updatedGame
-      .updateEntityEnergy(command.sourceId, energy => energy - command.cost);
+  if (commandResult.status === CommandResultType.SUCCESS) {
+    updatedGame = commandData.getEffect(game, command);
+    if (command.sourceId && command.cost) {
+      return updatedGame
+        .updateEntityEnergy(command.sourceId, energy => energy - command.cost);
+    }
   }
   return updatedGame;
 }

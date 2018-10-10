@@ -12,6 +12,7 @@ import CONST_INPUT from "./rdx.input._";
 import {PlayerInputModeType} from "./PlayerInputMode";
 import {getTileId, getTileX, getTileY} from "../const.game";
 import TraitId from "../model/traits/TraitId";
+import {action$inputPlayer} from "./rdx.input.actions";
 
 const Key = {
   W: 87
@@ -30,7 +31,7 @@ const KeyCommands = {
   , INTERACT: 'INTERACT'
 };
 
-const keyCode2inputCommand = {
+const keyCode2keyCommand = {
   [Key.W]: KeyCommands.UP
   , [Key.A]: KeyCommands.LEFT
   , [Key.S]: KeyCommands.DOWN
@@ -38,33 +39,33 @@ const keyCode2inputCommand = {
   , [Key.E]: KeyCommands.INTERACT
 };
 
-const inputCommand2offset = {
+const keyCommand2offset = {
   [KeyCommands.UP]: {x: 0, y: -1}
   , [KeyCommands.LEFT]: {x: -1, y: 0}
   , [KeyCommands.DOWN]: {x: 0, y: +1}
   , [KeyCommands.RIGHT]: {x: +1, y: 0}
 };
 
-const moveCommand = (state, inputCommand) => {
-  const game = selectGame(state);
-  const offset = inputCommand2offset[inputCommand];
+const moveCommand = (keyCommand) => {
+  const offset = keyCommand2offset[keyCommand];
 
-  return game.playerMode.onCursorMove(state, offset);
+  return {
+    type: CONST_INPUT.InputCommand_MOVE
+    , offset
+  };
 };
 
-const inputCommand2command = {
+const keyCommand2inputCommand = {
   [KeyCommands.UP]: moveCommand
   , [KeyCommands.LEFT]: moveCommand
   , [KeyCommands.DOWN]: moveCommand
   , [KeyCommands.RIGHT]: moveCommand
   , [KeyCommands.INTERACT]: (state) => {
-    const game = selectGame(state);
-    const sourceId = game.playerId;
-    return Rx.of(action$playerModeChange(
-      PlayerInputModeType.TARGET_NEAR
-      , (game, targetId) => {
-        return CommandData[CommandId.INTERACT].getCommand(sourceId, targetId);
-      }));
+    return {
+      type: CONST_INPUT.InputCommand_PLAYER_MODE_CHANGE
+      , playerModeType: PlayerInputModeType.TARGET_NEAR
+      , command: CommandId.INTERACT
+    };
   }
 };
 
@@ -72,9 +73,13 @@ export default [
   // (actions$, state$) => actions$.pipe(ofType('keyDown')
   (actions$, state$) => Rx.fromEvent(document, 'keyup').pipe(
     op.map(e => e.which || e.keyCode || 0)
-    , op.map(keyCode => keyCode2inputCommand[keyCode])
+    , op.map(keyCode => keyCode2keyCommand[keyCode])
     , op.filter(_.identity)
-    , op.mergeMap((inputCommand) => inputCommand2command[inputCommand](state$.value, inputCommand))
+    , op.timeInterval()
+    , op.mergeMap(({interval, value: keyCommand}) => {
+      const inputCommand = keyCommand2inputCommand[keyCommand](keyCommand);
+      return Rx.of(action$inputPlayer(inputCommand, interval));
+    })
   )
   , (actions$, state$) => Rx.merge(
     actions$.pipe(ofType(CONST_INPUT.tileClicked))

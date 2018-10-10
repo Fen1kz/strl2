@@ -37,10 +37,8 @@ export class Game extends React.Component {
   shouldComponentUpdate(props) {
     const oldGame = this.props.game;
     const newGame = props.game;
-    // console.log('shouldComponentUpdate');
-    // console.log('old vs new', newGame === oldGame);
-    // console.log('old vs new', oldGame.emap === newGame.emap);
-    return oldGame.emap !== newGame.emap
+    return true;
+    // return oldGame.emap !== newGame.emap
   }
 
   componentDidMount() {
@@ -90,7 +88,7 @@ export class Game extends React.Component {
   }
 
   render() {
-    console.log('render');
+    // console.log('render');
     const {game, player, tiles} = this.props;
 
     return (<div>

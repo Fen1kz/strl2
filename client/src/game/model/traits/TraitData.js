@@ -29,11 +29,7 @@ createTraitData(TraitId.Player, {
     .addTrait(TraitId.AbilityInteract, null)
     .addTrait(TraitId.StatStrength, null)
   , requestCommand(game, entity) {
-    if (!game.queue.isEmpty()) {
-      return game.queue.first();
-    } else {
-      return TraitId.Player;
-    }
+    return TraitId.Player;
   }
 });
 
