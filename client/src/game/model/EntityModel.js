@@ -50,8 +50,9 @@ export class EntityModel extends Record({
     return this.traits.get(traitId);
   }
 
-  getCommandsArray() {
-    return this.traitCommandHandlers.toArray();
+  requestCommandFromTraits(game) {
+    return this.traitCommandHandlers.toArray()
+      .map(handler => handler(game, this));
   }
 }
 

@@ -27,9 +27,8 @@ export const PlayerInputModeType = {
 export const PlayerInputMode = {
   [PlayerInputModeType.DEFAULT]: PlayerInputModeModel({
     id: PlayerInputModeType.DEFAULT
-    , onCursorMove(state, offset) {
-      const game = selectGame(state);
-      const player = game.getPlayer(game);
+    , onCursorMove(game, offset) {
+      const player = game.getPlayer();
       const playerTileId = game.getEntityTileId(player.id);
       const targetTileId = getTileIdOffset(playerTileId, offset.x, offset.y);
       return Rx.of(
@@ -41,8 +40,7 @@ export const PlayerInputMode = {
   })
   , [PlayerInputModeType.TARGET_NEAR]: PlayerInputModeModel({
     id: PlayerInputModeType.TARGET_NEAR
-    , onCursorMove(state, offset) {
-      const game = selectGame(state);
+    , onCursorMove(game, offset) {
       const targetTileId = getTileIdOffset(game.playerMode.cursor, offset.x, offset.y);
       const actions = [action$playerModeChange(PlayerInputModeType.DEFAULT, null)];
       const entityIdInteractive = game.findEntityIdInTile(targetTileId
@@ -55,13 +53,11 @@ export const PlayerInputMode = {
   })
   , [PlayerInputModeType.TARGET_FAR]: PlayerInputModeModel({
     id: PlayerInputModeType.TARGET_FAR
-    , onCursorMove(state, offset) {
-      const game = selectGame(state);
+    , onCursorMove(game, offset) {
       const targetTileId = getTileIdOffset(game.playerMode.cursor, offset.x, offset.y);
       return Rx.of(action$playerCursorMove(targetTileId));
     }
-    , onConfirm(state) {
-      const game = selectGame(state);
+    , onConfirm(game) {
       const actions = [action$playerModeChange(PlayerInputModeType.DEFAULT, null)];
       actions.unshift(
         action$playerCommand(game.playerMode.commandFn(game.playerMode.cursor))

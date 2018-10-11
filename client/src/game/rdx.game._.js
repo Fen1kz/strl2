@@ -1,6 +1,7 @@
 export default {
   gameLoopStart: 'gameLoopStart'
   , gameLoopContinue: 'gameLoopContinue'
+  , gameLoopApply: 'gameLoopApply'
   , gameLoopEnergy: 'gameLoopEnergy'
   , gameLoopStop: 'gameLoopStop'
   , loadGameViewComplete: 'loadGameViewComplete'

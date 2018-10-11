@@ -43,7 +43,7 @@ export default [
       if (!game.rxEventHandlers.has(event.type)) {
         return Rx.NEVER;
       }
-      return game.onRxEvent(event.type, state$.value, event.data);
+      return game.onRxEvent(event.type, actions$, state$, event.data);
     })
   )
 ];

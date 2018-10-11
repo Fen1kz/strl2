@@ -8,6 +8,10 @@ export const action$gameLoopContinue = () => ({
   type: CONST_GAME.gameLoopContinue
 });
 
+export const action$gameLoopApply = () => ({
+  type: CONST_GAME.gameLoopApply
+});
+
 export const action$gameLoopEnergy = () => ({
   type: CONST_GAME.gameLoopEnergy
 });
@@ -57,9 +61,9 @@ export const action$entityCommandApplyEffects = () => ({
 * Player
 * */
 
-export const action$playerCommand = (command) => ({
+export const action$playerCommand = (command, interval) => ({
   type: CONST_GAME.playerCommand
-  , data: {command}
+  , data: {command, interval}
 });
 
 export const action$playerModeChange = (modeId, commandFn) => ({
