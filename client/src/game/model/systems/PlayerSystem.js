@@ -10,7 +10,7 @@ import TraitModel from '../TraitModel';
 import TraitId from '../traits/TraitId';
 
 import {selectGame} from "../../rdx.game.selectors";
-import {action$playerCommand} from "../../rdx.game.actions";
+import {action$entityCommand} from "../../rdx.game.actions";
 import CommandData from "../commands/CommandData";
 import CommandId from "../commands/CommandId";
 import {PlayerInputMode, PlayerInputModeType} from "../../input/PlayerInputMode";

@@ -1,6 +1,8 @@
 import {Map} from "immutable";
+import {updateViaReduce} from "../Model.utils";
+import TraitData from "../traits/TraitData";
 
-export function EntitySystem () {
+export function EntitySystem() {
   return {
     emap: Map()
     , entityIdCounter: 0
@@ -23,6 +25,18 @@ export function EntitySystem () {
     , removeEntity(entityId) {
       return this
         .removeIn(['emap', entityId])
+    }
+    , events: {
+      onEntityMove(sourceId, targetTileId) {
+        return this.update(updateViaReduce(this.getTraitsOnTile(targetTileId)
+          , (game, [entityId, traitId]) => {
+            const traitData = TraitData[traitId];
+            if (traitData.onTileEvent && traitData.onTileEvent.onEntityMove) {
+              return traitData.onTileEvent.onEntityMove(game, entityId, traitId);
+            }
+            return game;
+          }))
+      }
     }
   }
 }

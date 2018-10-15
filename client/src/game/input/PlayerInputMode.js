@@ -3,7 +3,7 @@ import CommandData from "../model/commands/CommandData";
 import CommandId from "../model/commands/CommandId";
 import {getTileIdOffset} from "../const.game";
 import {
-  action$playerCommand
+  action$entityCommand
   , action$playerCursorMove, action$playerModeChange
 } from "../rdx.game.actions";
 import {selectGame} from "../rdx.game.selectors"
@@ -32,7 +32,7 @@ export const PlayerInputMode = {
       const playerTileId = game.getEntityTileId(player.id);
       const targetTileId = getTileIdOffset(playerTileId, offset.x, offset.y);
       return Rx.of(
-        action$playerCommand(
+        action$entityCommand(
           CommandData[CommandId.MOVE].getCommand(player.id, targetTileId)
         )
       );
@@ -42,12 +42,18 @@ export const PlayerInputMode = {
     id: PlayerInputModeType.TARGET_NEAR
     , onCursorMove(game, offset) {
       const targetTileId = getTileIdOffset(game.playerMode.cursor, offset.x, offset.y);
-      const actions = [action$playerModeChange(PlayerInputModeType.DEFAULT, null)];
-      const entityIdInteractive = game.findEntityIdInTile(targetTileId
+      const actions = [];
+      const entityIdInteractive = game.findEntityIdOnTile(targetTileId
         , (eid) => game.getEntityTrait(eid, TraitId.Interactive));
       if (entityIdInteractive) {
-        actions.unshift(action$playerCommand(game.playerMode.commandFn(game, entityIdInteractive)))
+        actions.push(action$entityCommand(
+          CommandData[game.playerMode.commandFn].getCommand(
+            game.playerId
+            , entityIdInteractive
+          )
+        ));
       }
+      actions.push(action$playerModeChange(PlayerInputModeType.DEFAULT, null));
       return Rx.from(actions);
     }
   })
@@ -60,7 +66,7 @@ export const PlayerInputMode = {
     , onConfirm(game) {
       const actions = [action$playerModeChange(PlayerInputModeType.DEFAULT, null)];
       actions.unshift(
-        action$playerCommand(game.playerMode.commandFn(game.playerMode.cursor))
+        action$entityCommand(game.playerMode.commandFn(game.playerMode.cursor))
       );
       return Rx.from(actions);
     }

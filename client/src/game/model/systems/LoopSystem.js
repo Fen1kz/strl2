@@ -11,17 +11,27 @@ import {updateViaReduce} from "../Model.utils";
 import {selectGame} from "../../rdx.game.selectors";
 import {
   action$gameLoopContinue
-  , action$gameLoopApply
-  , action$gameLoopEnergy
-  , action$entityCommandRequestActions
-  , action$entityCommandGetResult
-  , action$entityCommandScheduleEffect
-  , action$entityCommandApplyEffects, action$playerCommand, action$playerModeChange
+  ,
+  action$gameLoopApply
+  ,
+  action$gameLoopEnergy
+  ,
+  action$entityCommandRequestActions
+  ,
+  action$entityCommandGetResult
+  ,
+  action$entityCommandScheduleEffect
+  ,
+  action$entityCommandApplyEffects,
+  action$entityCommand,
+  action$playerModeChange,
+  action$entityCommandApplyEffect,
+  action$playerQueueShift, action$playerQueueClear
 } from "../../rdx.game.actions";
 import CommandData, {CommandTargetType} from "../commands/CommandData";
 import {CommandResultType} from "../commands/CommandResult";
 import CommandResult from "../commands/CommandResult";
-import {getCommandResult} from "../commands/Command.utils";
+import {applyCommandEffect, getCommandResult} from "../commands/Command.utils";
 import {ofType} from "redux-observable";
 import CommandId from "../commands/CommandId";
 
@@ -63,6 +73,9 @@ export function LoopSystem() {
         }
         return this;
       }
+      , [CONST_GAME.entityCommandApplyEffect] ({command}) {
+        return applyCommandEffect(this, command)
+      }
       , [CONST_INPUT.inputPlayer]({inputCommand, interval}) {
         console.log('event', waitingForInput, interval < TIME_DEBOUNCE, inputCommand);
         if (!waitingForInput) {
@@ -74,23 +87,26 @@ export function LoopSystem() {
         }
         return this;
       }
-      // , [CONST_GAME.playerCommand]({command, interval}) {
-      //   console.log('playedCommand', waitingForInput, this.queue.size);
-      //   return this.update('queue', queue => queue.shift());
-      // }
+      , [CONST_GAME.playerQueueShift]() {
+        console.log('playerQueueShift', waitingForInput, this.queue.size);
+        return this.update('queue', queue => queue.shift());
+      }
+      , [CONST_GAME.playerQueueClear]() {
+        console.log('playerQueueClear', waitingForInput, this.queue.size);
+        return this.set('queue', List());
+      }
     }
     , rxEvents: {
       [CONST_GAME.gameLoopStart]() {
         return Rx.of(action$gameLoopContinue());
       }
       , [CONST_GAME.gameLoopContinue](actions$) {
-        // ask entity => [trait, trait]
-
         // const commandsPerEntityPerActors = [[cmd$, cmd$], [cmd$, cmd$], [cmd$, cmd$]]
-        const commandsPerEntityPerActors = this.actors.keySeq().toArray()
+        const commandsPerEntityPerActors = this.actors.keySeq()
           .filter(entityId => this.getEntityEnergy(entityId) >= 0)
           .map(entityId => getCommandsPerEntity(this, entityId, actions$))
-          .filter(commands => commands.length > 0);
+          .filter(commands => commands.length > 0)
+          .toArray();
 
         if (commandsPerEntityPerActors.length === 0) {
           // No active entities
@@ -99,11 +115,12 @@ export function LoopSystem() {
             , Rx.of(action$gameLoopContinue())
           )
         } else {
-          // No active entities
           return Rx.concat(
             Rx.from(commandsPerEntityPerActors).pipe(
               op.concatAll() // [cmd$, cmd$] - [cmd$, cmd$] => cmd$ - cmd$ - cmd$
-              , op.concatMap(command => entityCommandGetResult(this, command))
+              , op.concatAll() // cmd$ - cmd$ - cmd$ => cmd - cmd - cmd
+              // , op.concatMap(command => entityCommandGetResult(this, command))
+              // , op.tap(console.log)
             )
             , Rx.of(action$gameLoopContinue()).pipe(op.delay(TIME_TURN))
           )
@@ -117,6 +134,10 @@ export function LoopSystem() {
           queue$.next(inputCommand);
         }
         return Rx.NEVER;
+      }
+      , [CONST_GAME.entityCommand](actions$, state$, command) {
+        console.log('entityCommand', command);
+        return entityCommandGetResult(this, command);
       }
     }
   };
@@ -132,25 +153,34 @@ export function LoopSystem() {
     // return [command$, command$, command$];
     return entity.requestCommandFromTraits(game)
       .filter(command => !!command)
-      .map(command => {
-        if (command !== TraitId.Player) {
-          return Rx.of(command);
-        } else {
-          console.log('game.queue', game.queue.size);
-          if (!game.queue.isEmpty()) {
-            return game.queue.first();
-          }
-          waitingForInput = true;
-          return queue$.pipe(op.take(1));
-        }
-      });
+      .map(command => getCommand(game, command));
+  }
+
+  function getCommand(game, command) {
+    if (command !== TraitId.Player) {
+      return Rx.of(action$entityCommand(command));
+    } else {
+      console.log('game.queue', game.queue.size);
+      if (!game.queue.isEmpty()) {
+        return Rx.concat(
+          Rx.of(action$playerQueueShift())
+          , processInputCommand(game, game.queue.first())
+        );
+      } else {
+        waitingForInput = true;
+        return queue$.pipe(
+          op.take(1)
+          , op.concatMap(ic => processInputCommand(game, ic))
+        );
+      }
+    }
   }
 
   function processInputCommand(game, inputCommand) {
     switch (inputCommand.type) {
       case CONST_INPUT.InputCommand_PLAYER_MODE_CHANGE:
         const {playerModeType, commandId} = inputCommand;
-        return Rx.of(action$playerModeChange(playerModeType, commandId));
+        return Rx.of(action$playerModeChange(playerModeType, commandId))
       case CONST_INPUT.InputCommand_MOVE:
         const {offset} = inputCommand;
         return game.playerMode.onCursorMove(game, offset);
@@ -162,15 +192,16 @@ export function LoopSystem() {
 
   function entityCommandGetResult(game, command) {
     const entityId = command.sourceId;
+    const isPlayer = game.playerId === entityId;
     const commandResult = getCommandResult(game, command);
     switch(commandResult.status) {
       case CommandResultType.SUCCESS:
-        return Rx.of(action$entityCommandScheduleEffect(command));
+        return Rx.of(action$entityCommandApplyEffect(command))
       case CommandResultType.REPLACE:
       case CommandResultType.REPLACE_FORCED:
         return entityCommandGetResult(game, commandResult.command);
       case CommandResultType.FAILURE:
-        return Rx.EMPTY;
+        return !isPlayer ? Rx.EMPTY : Rx.of(action$playerQueueClear());
       default:
         console.error(`Invalid commandResult`, commandResult);
         throw new Error(`Invalid commandResult ${commandResult}`);

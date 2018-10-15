@@ -18,20 +18,26 @@ export function getCommandResult(game, command) {
 }
 
 function getCommandResultByTile(game, command) {
+  const commandData = CommandData[command.id];
   const tileId = command.targetId;
   let resultSuccess = true;
   let resultReplace = null;
   game.getTile(tileId).elist.some(entityId => {
-    const result = getCommandResultByEntity(game, command, entityId);
-    if (result.status === CommandResultType.FAILURE) {
-      resultSuccess = false;
-    } else if (result.status === CommandResultType.REPLACE) {
-      resultSuccess = false;
-      resultReplace = result;
-    } else if (result.status === CommandResultType.REPLACE_FORCED) {
-      resultSuccess = false;
-      resultReplace = result;
-    }
+    game.getEntity(entityId).traits
+      .some((traitValue, traitId) => {
+        const resultByTraitFn = commandData.resultByTrait[traitId];
+        if (resultByTraitFn) {
+          const result = resultByTraitFn(game, command, traitValue, command.sourceId, entityId);
+          if (result.status === CommandResultType.FAILURE) {
+            resultSuccess = false;
+          } else if (result.status === CommandResultType.REPLACE) {
+            resultReplace = result;
+          } else if (result.status === CommandResultType.REPLACE_FORCED) {
+            resultSuccess = false;
+            resultReplace = result;
+          }
+        }
+      });
     return (!resultSuccess && resultReplace);
   });
   return compileCommandResult(resultSuccess, resultReplace);

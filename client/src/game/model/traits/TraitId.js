@@ -15,6 +15,7 @@ export default {
   , PhysItem: 'PhysItem'
   , Crate: 'Crate'
   , Wire: 'Wire'
+  , PressurePlate: 'PressurePlate'
 
   , StatStrength: 'StatStrength'
 

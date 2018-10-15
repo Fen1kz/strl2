@@ -3,7 +3,7 @@ import * as Rx from 'rxjs';
 import * as op from "rxjs/operators";
 import {ofType} from "redux-observable";
 
-import {action$playerCommand, action$playerModeChange} from "../rdx.game.actions";
+import {action$entityCommand, action$playerModeChange} from "../rdx.game.actions";
 import CommandData from "../model/commands/CommandData";
 import CommandId from "../model/commands/CommandId";
 import {selectGame} from "../rdx.game.selectors";
@@ -81,22 +81,22 @@ export default [
       return Rx.of(action$inputPlayer(inputCommand, interval));
     })
   )
-  , (actions$, state$) => Rx.merge(
-    actions$.pipe(ofType(CONST_INPUT.tileClicked))
-    , actions$.pipe(ofType(CONST_INPUT.entityClicked))
-  ).pipe(
-    op.pluck('data')
-    , op.mergeMap(({tileId}) => {
-      const game = selectGame(state$.value);
-      const player = game.getPlayer(game);
-      const playerTile = game.getEntityTileId(player.id);
-      const tile = game.getTile(tileId);
-      if (tile.isNext(playerTile)) {
-        const command = CommandData[CommandId.MOVE].getCommand(player.id, tileId);
-        return Rx.of(action$playerCommand(command));
-      } else {
-        return Rx.NEVER;
-      }
-    })
-  )
+  // , (actions$, state$) => Rx.merge(
+  //   actions$.pipe(ofType(CONST_INPUT.tileClicked))
+  //   , actions$.pipe(ofType(CONST_INPUT.entityClicked))
+  // ).pipe(
+  //   op.pluck('data')
+  //   , op.mergeMap(({tileId}) => {
+  //     const game = selectGame(state$.value);
+  //     const player = game.getPlayer(game);
+  //     const playerTile = game.getEntityTileId(player.id);
+  //     const tile = game.getTile(tileId);
+  //     if (tile.isNext(playerTile)) {
+  //       const command = CommandData[CommandId.MOVE].getCommand(player.id, tileId);
+  //       return Rx.of(action$playerCommand(command));
+  //     } else {
+  //       return Rx.NEVER;
+  //     }
+  //   })
+  // )
 ];

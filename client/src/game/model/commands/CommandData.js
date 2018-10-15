@@ -63,12 +63,8 @@ const CommandData = {
         .updateEntity(sourceId, entity => entity.setIn(['traits', TraitId.Position], targetId))
         .updateTile(tileId, tile => tile.update('elist', elist => elist.filter(entityId => entityId !== sourceId)))
         .updateTile(targetId, tile => tile.update('elist', elist => elist.push(sourceId)))
-        .update(game => {
-          if (sourceId === game.playerId) {
-            return game.onEvent('onPlayerMove')
-          }
-          return game;
-        });
+        .update(game => sourceId === game.playerId ? game.onEvent('onPlayerMove') : game)
+        .onEvent('onEntityMove', sourceId, targetId);
     }
   })
   , [CommandId.COMBINED]: CommandDataModel.fromJS({

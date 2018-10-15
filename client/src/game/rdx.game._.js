@@ -8,12 +8,15 @@ export default {
   , loadLevelComplete: 'loadLevelComplete'
   , gameSpawnPlayer: 'gameSpawnPlayer'
   , gameEvent: 'gameEvent'
-  , playerCommand: 'playerCommand'
+  , entityCommand: 'entityCommand'
   , playerModeChange: 'playerModeChange'
   , playerCursorMove: 'playerCursorMove'
+  , playerQueueShift: 'playerQueueShift'
+  , playerQueueClear: 'playerQueueClear'
 
   , entityCommandRequestActions: 'entityCommandRequestActions'
   , entityCommandGetResult: 'entityCommandGetResult'
+  , entityCommandApplyEffect: 'entityCommandApplyEffect'
   , entityCommandScheduleEffect: 'entityCommandScheduleEffect'
   , entityCommandApplyEffects: 'entityCommandApplyEffects'
 };

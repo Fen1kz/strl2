@@ -22,11 +22,11 @@ const initialState = createGameModel();
 
 export default createReducer(initialState, {
   [CONST_GAME.gameLoopStart]: (game, data) => game.set('running', true)
-  , [CONST_GAME.gameLoopContinue]: (game) => {
-    return game
-      .update(updateViaReduce(game.scheduledEffects, applyCommandEffect))
-      .set('scheduledEffects', List())
-  }
+  // , [CONST_GAME.gameLoopContinue]: (game) => {
+  //   return game
+  //     .update(updateViaReduce(game.scheduledEffects, applyCommandEffect))
+  //     .set('scheduledEffects', List())
+  // }
   , [CONST_GAME.gameLoopEnergy]: (game) => {
     return game.update(updateViaReduce(game.actors, (game, energy, actorId) => {
       return game.updateEntityEnergy(actorId, energy => energy + 5);

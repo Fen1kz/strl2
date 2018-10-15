@@ -53,6 +53,11 @@ export const action$entityCommandScheduleEffect = (command) => ({
   , data: {command}
 });
 
+export const action$entityCommandApplyEffect = (command) => ({
+  type: CONST_GAME.entityCommandApplyEffect
+  , data: {command}
+});
+
 export const action$entityCommandApplyEffects = () => ({
   type: CONST_GAME.entityCommandApplyEffects
 });
@@ -61,9 +66,17 @@ export const action$entityCommandApplyEffects = () => ({
 * Player
 * */
 
-export const action$playerCommand = (command, interval) => ({
-  type: CONST_GAME.playerCommand
-  , data: {command, interval}
+export const action$entityCommand = (command) => ({
+  type: CONST_GAME.entityCommand
+  , data: command
+});
+
+export const action$playerQueueShift = () => ({
+  type: CONST_GAME.playerQueueShift
+});
+
+export const action$playerQueueClear = () => ({
+  type: CONST_GAME.playerQueueClear
 });
 
 export const action$playerModeChange = (modeId, commandFn) => ({

@@ -138,4 +138,20 @@ createTraitData(TraitId.MnstrZombie, {
 createTraitData(TraitId.Wire, {
 });
 
+createTraitData(TraitId.PressurePlate, {
+  defaultData: {
+    state: false
+    , onPressed: null
+    , offPressed: null
+  }
+  , onAttach: (entity) => entity
+    .addTrait(TraitId.GfxText, 'p')
+  , onTileEvent: {
+    onEntityMove(game, entityId) {
+      console.log('ONMOVE')
+      return game;
+    }
+  }
+});
+
 export default TraitData;
