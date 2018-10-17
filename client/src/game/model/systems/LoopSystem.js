@@ -11,18 +11,11 @@ import {updateViaReduce} from "../Model.utils";
 import {selectGame} from "../../rdx.game.selectors";
 import {
   action$gameLoopContinue
-  ,
-  action$gameLoopApply
-  ,
-  action$gameLoopEnergy
-  ,
-  action$entityCommandRequestActions
-  ,
-  action$entityCommandGetResult
-  ,
-  action$entityCommandScheduleEffect
-  ,
-  action$entityCommandApplyEffects,
+  ,  action$gameLoopApply
+  ,  action$gameLoopEnergy
+  ,  action$entityCommandRequestActions
+  ,  action$entityCommandGetResult
+  ,  action$entityCommandApplyEffects,
   action$entityCommand,
   action$playerModeChange,
   action$entityCommandApplyEffect,
@@ -73,7 +66,7 @@ export function LoopSystem() {
         }
         return this;
       }
-      , [CONST_GAME.entityCommandApplyEffect] ({command}) {
+      , [CONST_GAME.entityCommandApplyEffect]({command}) {
         return applyCommandEffect(this, command)
       }
       , [CONST_INPUT.inputPlayer]({inputCommand, interval}) {
@@ -194,7 +187,7 @@ export function LoopSystem() {
     const entityId = command.sourceId;
     const isPlayer = game.playerId === entityId;
     const commandResult = getCommandResult(game, command);
-    switch(commandResult.status) {
+    switch (commandResult.status) {
       case CommandResultType.SUCCESS:
         return Rx.of(action$entityCommandApplyEffect(command))
       case CommandResultType.REPLACE:

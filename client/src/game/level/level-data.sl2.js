@@ -1,5 +1,6 @@
 import TraitId from "../model/traits/TraitId";
 import CommandId from '../model/commands/CommandId';
+import {CommandEffect, WireEffect} from "../model/effects";
 
 export default {
 // @formatter:off
@@ -53,19 +54,18 @@ export default {
       xy: [5, 5]
       , traits: {
         [TraitId.GfxText]: '/'
-        , [TraitId.Interactive]: CommandId.SIGNAL_EMIT
-        , [TraitId.Wire]: {
-          targets: ['id0-door']
-        }
+        , [TraitId.Interactive]: ReplaceEffect({
+          effect: WireEffect({
+            targets: ['id0-door']
+            , effect: CommandEffect({commandId: CommandId.SWITCH})
+          })
+        })
       }
     }, {
       xy: [6, 5]
       , id: 'id0-door'
       , traits: {
         [TraitId.Door]: true
-        , [TraitId.Wire]: {
-          onSignal: CommandId.SWITCH
-        }
       }
     }
 
@@ -74,11 +74,8 @@ export default {
       xy: [7, 2]
       , traits: {
         [TraitId.PressurePlate]: {
-          onPressed: CommandId.SIGNAL_EMIT
-          , offPressed: CommandId.SIGNAL_EMIT
-        }
-        , [TraitId.Wire]: {
-          targets: ['id1-door']
+          onPressed: WireEffect({targets: ['id1-door'], effect: CommandEffect({commandId: CommandId.OPEN})})
+          , offPressed: WireEffect({targets: ['id1-door'], effect: CommandEffect({commandId: CommandId.CLOSE})})
         }
       }
     }, {
@@ -86,9 +83,6 @@ export default {
       , id: 'id1-door'
       , traits: {
         [TraitId.Door]: true
-        , [TraitId.Wire]: {
-          onSignal: CommandId.SWITCH
-        }
       }
     }
   ]

@@ -1,5 +1,5 @@
 import _ from "lodash";
-import {Record, Map, List, fromJS} from "immutable";
+import {Record, Map, List, fromJS, Iterable} from "immutable";
 import {updateViaReduce} from './Model.utils';
 
 import {getTileId, getTileX, getTileY} from '../const.game';
@@ -29,16 +29,21 @@ export class EntityModel extends Record({
   }
 
   addTrait(traitId, data) {
-    const trait = TraitData[traitId];
-    if (!trait) throw new Error(`No trait[${traitId}]`);
-    const traitData = (data instanceof Object) ? fromJS(Object.assign({}, trait.defaultData, data))
-      : data !== void 0 ? data
-        : trait.defaultData;
-    return this.setIn(['traits', traitId], traitData)
-      .update(self => trait.onAttach(self, traitData))
+    const traitData = TraitData[traitId];
+    if (!traitData) throw new Error(`No TraitData[${traitId}]`);
+    let traitValue;
+    if (Iterable.isIterable(data)) {
+      traitValue = data;
+    } else if (data instanceof Object) {
+      traitValue = fromJS(Object.assign({}, traitData.defaultData, data));
+    } else {
+      traitValue = data !== void 0 ? data : traitData.defaultData;
+    }
+    return this.setIn(['traits', traitId], traitValue)
+      .update(self => traitData.onAttach(self, traitValue))
       .update(self => {
-        if (!trait.requestCommand) return self;
-        return self.update('traitCommandHandlers', (list = List()) => list.push(trait.requestCommand));
+        if (!traitData.requestCommand) return self;
+        return self.update('traitCommandHandlers', (list = List()) => list.push(traitData.requestCommand));
       });
   }
 

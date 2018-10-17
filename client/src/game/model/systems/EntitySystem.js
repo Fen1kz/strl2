@@ -27,12 +27,22 @@ export function EntitySystem() {
         .removeIn(['emap', entityId])
     }
     , events: {
-      onEntityMove(sourceId, targetTileId) {
+      onEntityLeaveTile(sourceId, targetTileId) {
         return this.update(updateViaReduce(this.getTraitsOnTile(targetTileId)
           , (game, [entityId, traitId]) => {
             const traitData = TraitData[traitId];
-            if (traitData.onTileEvent && traitData.onTileEvent.onEntityMove) {
-              return traitData.onTileEvent.onEntityMove(game, entityId, traitId);
+            if (traitData.onTileEvent && traitData.onTileEvent.onEntityLeaveTile) {
+              return traitData.onTileEvent.onEntityLeaveTile(game, entityId, traitId);
+            }
+            return game;
+          }))
+      }
+      , onEntityEnterTile(sourceId, targetTileId) {
+        return this.update(updateViaReduce(this.getTraitsOnTile(targetTileId)
+          , (game, [entityId, traitId]) => {
+            const traitData = TraitData[traitId];
+            if (traitData.onTileEvent && traitData.onTileEvent.onEntityEnterTile) {
+              return traitData.onTileEvent.onEntityEnterTile(game, entityId, traitId);
             }
             return game;
           }))

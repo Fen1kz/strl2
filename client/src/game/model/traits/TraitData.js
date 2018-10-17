@@ -4,6 +4,7 @@ import TraitId from './TraitId'
 import TraitModel from '../TraitModel';
 import CommandData from "../commands/CommandData";
 import CommandId from "../commands/CommandId";
+import {CommandEffect} from "../effects";
 
 const TraitData = {
   getTrait(traitId) {
@@ -68,7 +69,7 @@ createTraitData(TraitId.Door, {
 createTraitData(TraitId.DoorInteractive, {
   onAttach: (entity, traitData) => entity
     .addTrait(TraitId.Door, traitData)
-    .addTrait(TraitId.Interactive, CommandId.SWITCH)
+    .addTrait(TraitId.Interactive, CommandEffect({commandId: CommandId.SWITCH}))
 });
 
 createTraitData(TraitId.AutoDoor, {
@@ -147,8 +148,12 @@ createTraitData(TraitId.PressurePlate, {
   , onAttach: (entity) => entity
     .addTrait(TraitId.GfxText, 'p')
   , onTileEvent: {
-    onEntityMove(game, entityId) {
-      console.log('ONMOVE')
+    onEntityLeaveTile(game, entityId) {
+      const traitEffect = game.getEntityTrait(entityId, TraitId.PressurePlate).offPressed;
+      return game;
+    }
+    , onEntityEnterTile(game, entityId) {
+      const traitEffect = game.getEntityTrait(entityId, TraitId.PressurePlate).onPressed;
       return game;
     }
   }
