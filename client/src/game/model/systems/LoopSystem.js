@@ -66,9 +66,6 @@ export function LoopSystem() {
         }
         return this;
       }
-      , [CONST_GAME.entityCommandApplyEffect]({command}) {
-        return applyCommandEffect(this, command)
-      }
       , [CONST_INPUT.inputPlayer]({inputCommand, interval}) {
         console.log('event', waitingForInput, interval < TIME_DEBOUNCE, inputCommand);
         if (!waitingForInput) {
@@ -87,6 +84,9 @@ export function LoopSystem() {
       , [CONST_GAME.playerQueueClear]() {
         console.log('playerQueueClear', waitingForInput, this.queue.size);
         return this.set('queue', List());
+      }
+      , [CONST_GAME.entityCommandApplyEffect]({command}) {
+        return applyCommandEffect(this, command)
       }
     }
     , rxEvents: {
@@ -141,8 +141,6 @@ export function LoopSystem() {
 
   function getCommandsPerEntity(game, entityId, actions$) {
     const entity = game.getEntity(entityId);
-    console.log('getCommandsPerEntity', entityId);
-
     // return [command$, command$, command$];
     return entity.requestCommandFromTraits(game)
       .filter(command => !!command)
@@ -173,7 +171,7 @@ export function LoopSystem() {
     switch (inputCommand.type) {
       case CONST_INPUT.InputCommand_PLAYER_MODE_CHANGE:
         const {playerModeType, commandId} = inputCommand;
-        return Rx.of(action$playerModeChange(playerModeType, commandId))
+        return Rx.of(action$playerModeChange(playerModeType, commandId));
       case CONST_INPUT.InputCommand_MOVE:
         const {offset} = inputCommand;
         return game.playerMode.onCursorMove(game, offset);
@@ -189,7 +187,7 @@ export function LoopSystem() {
     const commandResult = getCommandResult(game, command);
     switch (commandResult.status) {
       case CommandResultType.SUCCESS:
-        return Rx.of(action$entityCommandApplyEffect(command))
+        return Rx.of(action$entityCommandApplyEffect(command));
       case CommandResultType.REPLACE:
       case CommandResultType.REPLACE_FORCED:
         return entityCommandGetResult(game, commandResult.command);

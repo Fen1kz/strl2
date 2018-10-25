@@ -54,11 +54,9 @@ export default {
       xy: [5, 5]
       , traits: {
         [TraitId.GfxText]: '/'
-        , [TraitId.Interactive]: ReplaceEffect({
-          effect: WireEffect({
-            targets: ['id0-door']
-            , effect: CommandEffect({commandId: CommandId.SWITCH})
-          })
+        , [TraitId.Interactive]: WireEffect({
+          targets: ['id0-door']
+          , effect: CommandEffect({commandId: CommandId.SWITCH})
         })
       }
     }, {

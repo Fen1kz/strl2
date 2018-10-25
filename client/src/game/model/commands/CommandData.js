@@ -7,6 +7,8 @@ import {getTileIdOffset, getTileX, getTileY} from "../../const.game";
 import {updateViaReduce} from "../Model.utils";
 import {applyCommandEffect, getCommandResult} from "./Command.utils";
 import {EffectApplier} from "../effects";
+import EffectData from "../effects/EffectData";
+import {EffectId} from "../EffectModel";
 
 export const CommandTargetType = {
   SELF: 'SELF'
@@ -61,22 +63,12 @@ const CommandData = {
       const tileId = game.getEntityTileId(sourceId);
       const targetTile = game.getTile(targetId);
       return game
-        .updateEntity(sourceId, entity => entity.setIn(['traits', TraitId.Position], targetId))
         .updateTile(tileId, tile => tile.update('elist', elist => elist.filter(entityId => entityId !== sourceId)))
-        .updateTile(targetId, tile => tile.update('elist', elist => elist.push(sourceId)))
-        .update(game => sourceId === game.playerId ? game.onEvent('onPlayerMove') : game)
         .onEvent('onEntityLeaveTile', sourceId, tileId)
-        .onEvent('onEntityEnterTile', sourceId, targetId);
-    }
-  })
-  , [CommandId.COMBINED]: CommandDataModel.fromJS({
-    id: CommandId.COMBINED
-    , targetType: CommandTargetType.COMBINED
-    , getCommand: (commands) => ({
-      id: CommandId.COMBINED, commands
-    })
-    , getEffect: (game, {commands}) => {
-      return game.update(updateViaReduce(commands, applyCommandEffect));
+        .updateEntity(sourceId, entity => entity.setIn(['traits', TraitId.Position], targetId))
+        .onEvent('onEntityEnterTile', sourceId, targetId)
+        .updateTile(targetId, tile => tile.update('elist', elist => elist.push(sourceId)))
+        .update(game => sourceId === game.playerId ? game.onEvent('onPlayerMove') : game);
     }
   })
   , [CommandId.INTERACT]: CommandDataModel.fromJS({
@@ -88,12 +80,14 @@ const CommandData = {
         if (!source.hasTrait(TraitId.AbilityInteract)) {
           return CommandResult.getFailure(command);
         }
-
-        const interactEffect = traitValue;
-        const effectApplierFn = EffectApplier[interactEffect.id];
-        return CommandResult.getReplaceForced(
-          effectApplierFn(game, command, interactEffect, sourceId, targetId)
-        );
+        if (command.targetId !== targetId) {
+          return CommandResult.getReplaceForced(
+            CommandData[CommandId.INTERACT].getCommand(
+              sourceId, targetId
+            )
+          );
+        }
+        return CommandResult.getSuccess(command);
         // const commandReplacement = CommandData[traitValue].getCommand;
         // return CommandResult.getReplaceForced(
         //   commandReplacement(sourceId, targetId, command.cost)
@@ -103,7 +97,10 @@ const CommandData = {
     , getCommand: (sourceId, targetId) => ({
       id: CommandId.INTERACT, cost: 10, sourceId, targetId
     })
-    , getEffect: g => g
+    , getEffect: (game, {sourceId, targetId}) => {
+      const traitInteractive = game.getEntityTrait(targetId, TraitId.Interactive);
+      return traitInteractive;
+    }
     // , getEffect: (game, {sourceId, targetId}) => {
     //   console.log(...args);
     //   return args[0];
@@ -116,9 +113,9 @@ const CommandData = {
       id: CommandId.SWITCH, sourceId, targetId, cost
     })
     , getEffect: (game, {targetId}) => {
-      return game
-        .updateEntity(targetId, entity => entity
-          .updateIn(['traits', TraitId.Impassable], value => !value))
+      const traitImpassable = game.getEntityTrait(targetId, TraitId.Impassable);
+      return EffectData[traitImpassable ? EffectId.OPEN : EffectId.CLOSE]
+        .getEffect(targetId);
     }
   })
   , [CommandId.OPEN]: CommandDataModel.fromJS({
@@ -128,9 +125,7 @@ const CommandData = {
       id: CommandId.OPEN, sourceId, targetId, cost
     })
     , getEffect: (game, {targetId}) => {
-      return game
-        .updateEntity(targetId, entity => entity
-          .setIn(['traits', TraitId.Impassable], false))
+      return EffectData[EffectId.OPEN].getEffect(sourceId, targetId);;
     }
   })
   , [CommandId.CLOSE]: CommandDataModel.fromJS({
@@ -139,10 +134,8 @@ const CommandData = {
     , getCommand: (sourceId, targetId, cost = 10) => ({
       id: CommandId.CLOSE, sourceId, targetId, cost
     })
-    , getEffect: (game, {targetId}) => {
-      return game
-        .updateEntity(targetId, entity => entity
-          .updateIn(['traits', TraitId.Impassable], true))
+    , getEffect: (game, {sourceId, targetId}) => {
+      return EffectData[EffectId.CLOSE].getEffect(sourceId, targetId);
     }
   })
   // , [CommandId.SIGNAL_EMIT]: CommandDataModel.fromJS({
