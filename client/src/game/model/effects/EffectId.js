@@ -1,5 +1,6 @@
 export default {
   MOVE: 'MOVE'
-  , OPEN: 'OPEN'
-  , CLOSE: 'CLOSE'
+  , TRAIT_VALUE_SET: 'TRAIT_VALUE_SET'
+  , TRAIT_VALUE_GET: 'TRAIT_VALUE_GET'
+  , VALUE_NOT: 'VALUE_NOT'
 }

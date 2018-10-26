@@ -1,6 +1,7 @@
 import {CommandResultType} from "./CommandResult";
 import CommandData, {CommandTargetType} from "./CommandData";
 import CommandResult from "./CommandResult";
+import EffectData from "../effects/EffectData";
 
 export function getCommandResult(game, command) {
   const commandData = CommandData[command.id];
@@ -92,11 +93,32 @@ export function applyCommandEffect(game, command) {
     console.log(updatedGame.queue.toJS());
   }
   if (commandResult.status === CommandResultType.SUCCESS) {
-    updatedGame = commandData.getEffect(game, command);
+    updatedGame = commandData.get(game, command);
     if (command.sourceId && command.cost) {
       return updatedGame
         .updateEntityEnergy(command.sourceId, energy => energy - command.cost);
     }
   }
   return updatedGame;
+}
+
+export class CommandResolver {
+  constructor(game, command) {
+    this.game = game;
+    this.scope = {};
+  }
+
+  get(effect, propKey) {
+    const propValue = effect[propKey];
+    if (propValue) {
+      if (propValue.isEffect === true) {
+        return EffectData[effect.id].resolveEffect(this, effect);
+      }
+    } else {
+      if (this.scope[propKey]) {
+        return this.scope[propKey];
+      }
+    }
+    return propValue;
+  }
 }

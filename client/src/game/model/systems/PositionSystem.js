@@ -24,6 +24,15 @@ export function PositionSystem() {
         return this
           .updateTile(tileId, tile => tile.update('elist', elist => elist.push(entity.id)));
       }
+      , onEntityLeaveTile(entityId, tileId) {
+        return this.updateTile(tileId, tile => tile
+          .remove('elist', elist => elist.filter(eid => eid !== entityId)))
+      }
+      , onEntityEnterTile(entityId, tileId) {
+        return this.updateTile(tileId, tile => tile
+          .updateEntity(entityId, entity => entity.setIn(['traits', TraitId.Position], tileId))
+          .update('elist', elist => elist.push(entityId)))
+      }
     }
   }
 }

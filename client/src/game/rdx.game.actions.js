@@ -53,6 +53,11 @@ export const action$entityCommandScheduleEffect = (command) => ({
   , data: {command}
 });
 
+export const action$entityApplyEffect = (effect) => ({
+  type: CONST_GAME.entityApplyEffect
+  , data: {effect}
+});
+
 export const action$entityCommandApplyEffect = (command) => ({
   type: CONST_GAME.entityCommandApplyEffect
   , data: {command}

@@ -5,6 +5,8 @@ import TraitModel from '../TraitModel';
 import CommandData from "../commands/CommandData";
 import CommandId from "../commands/CommandId";
 import {CommandEffect} from "../effects";
+import EffectData from "../effects/EffectData";
+import EffectId from "../effects/EffectId";
 
 const TraitData = {
   getTrait(traitId) {
@@ -103,11 +105,18 @@ createTraitData(TraitId.AutoDoor, {
   , requestCommand(game, entity) {
     const traitAutoDoor = entity.getTrait(TraitId.AutoDoor);
     const traitImpassable = entity.getTrait(TraitId.Impassable);
-    return CommandData[CommandId.SWITCH].getCommand(
-      entity.id
-      , entity.id
-      , traitAutoDoor.get(traitImpassable ? 'toOpen' : 'toClose')
-    );
+    return CommandData.ENTITY_EFFECT.getCommand({
+      sourceId: entity.id
+      , targetId: entity.id
+      , cost: traitAutoDoor.get(traitImpassable ? 'toOpen' : 'toClose')
+      , effect: EffectData.TRAIT_VALUE_SET.get({
+        value: EffectData.VALUE_NOT.get({
+          value: EffectData.TRAIT_VALUE_GET.get({
+            traitId: TraitId.Impassable
+          })
+        })
+      })
+    });
   }
 });
 

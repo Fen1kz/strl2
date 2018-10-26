@@ -24,7 +24,7 @@ import {
 import CommandData, {CommandTargetType} from "../commands/CommandData";
 import {CommandResultType} from "../commands/CommandResult";
 import CommandResult from "../commands/CommandResult";
-import {applyCommandEffect, getCommandResult} from "../commands/Command.utils";
+import {applyCommandEffect, CommandResolver, getCommandResult, resolveEntityCommand} from "../commands/Command.utils";
 import {ofType} from "redux-observable";
 import CommandId from "../commands/CommandId";
 
@@ -86,6 +86,7 @@ export function LoopSystem() {
         return this.set('queue', List());
       }
       , [CONST_GAME.entityCommandApplyEffect]({command}) {
+        console.log(action$entityCommandApplyEffect)
         return applyCommandEffect(this, command)
       }
     }
@@ -129,8 +130,8 @@ export function LoopSystem() {
         return Rx.NEVER;
       }
       , [CONST_GAME.entityCommand](actions$, state$, command) {
-        console.log('entityCommand', command);
-        return entityCommandGetResult(this, command);
+        const resolver = new CommandResolver(this);
+        return CommandData[command.id].resolveCommand(resolver, command);
       }
     }
   };
