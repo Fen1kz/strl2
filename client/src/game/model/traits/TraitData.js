@@ -109,11 +109,10 @@ createTraitData(TraitId.AutoDoor, {
       sourceId: entity.id
       , targetId: entity.id
       , cost: traitAutoDoor.get(traitImpassable ? 'toOpen' : 'toClose')
-      , effect: EffectData.TRAIT_VALUE_SET.get({
-        value: EffectData.VALUE_NOT.get({
-          value: EffectData.TRAIT_VALUE_GET.get({
-            traitId: TraitId.Impassable
-          })
+      , effect: EffectData.TRAIT_VALUE_SET.getEffect({
+        traitId: TraitId.Impassable
+        , value: EffectData.VALUE_NOT.getEffect({
+          value: EffectData.TRAIT_VALUE_GET.getEffect()
         })
       })
     });

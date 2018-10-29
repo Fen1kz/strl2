@@ -71,8 +71,8 @@ const CommandData = {
       }
     }
     , getEffect: (game, {sourceId, targetTileId}) => {
-      const Impassable = EffectData.TRAIT_VALUE_GET.get();
-      const MoveEffect = EffectData.MOVE.get(targetTileId)
+      const Impassable = EffectData.TRAIT_VALUE_GET.getEffect();
+      const MoveEffect = EffectData.MOVE.getEffect(targetTileId)
     }
   })
   // , [CommandId.INTERACT]: CommandDataModel.fromJS({

@@ -105,20 +105,56 @@ export function applyCommandEffect(game, command) {
 export class CommandResolver {
   constructor(game, command) {
     this.game = game;
-    this.scope = {};
+    console.log('command', command);
+    this.scope = {
+      sourceId: command.sourceId
+      , targetId: command.targetId
+    };
   }
 
-  get(effect, propKey) {
+  resolveEffect(effect, scope) {
+    Object.keys(effect).map(key => {
+      const value = effect[key];
+      if (key === 'id' || key === 'isEffect') {
+        return void 0
+      } else if (value !== void 0) {
+        if (this.scope[key] === void 0) {
+          this.scope[key] = value;
+          if (value.isEffect) {
+            return value;
+          }
+        }
+      } else if (this.scope[key] === void 0) {
+        console.warning('Resolver cannot get', key, 'in', effect);
+      } else {
+        const scoped = this.scope[key];
+        if (scoped.isEffect) {
+          effect.value = 
+        } else {
+          effect.value = scoped;
+        }
+      }
+    }).filter(v => v)
+      .forEach(subeffect => {
+        this.resolveEffect(subeffect, scope)
+      })
+    // this.scope
+  }
+
+  get(propKey, effect) {
     const propValue = effect[propKey];
     if (propValue) {
       if (propValue.isEffect === true) {
-        return EffectData[effect.id].resolveEffect(this, effect);
+        const value = EffectData[propValue.id].resolveEffect(this, propValue);
+        // this.scope[propKey] = value;
+        return value;
+      } else {
+        return propValue;
       }
+    } else if (this.scope[propKey]) {
+      return this.scope[propKey];
     } else {
-      if (this.scope[propKey]) {
-        return this.scope[propKey];
-      }
+      console.warning('Resolved cannot get', propKey, 'in', effect);
     }
-    return propValue;
   }
 }

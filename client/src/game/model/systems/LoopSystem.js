@@ -86,7 +86,7 @@ export function LoopSystem() {
         return this.set('queue', List());
       }
       , [CONST_GAME.entityCommandApplyEffect]({command}) {
-        console.log(action$entityCommandApplyEffect)
+        console.log('action$entityCommandApplyEffect');
         return applyCommandEffect(this, command)
       }
     }
@@ -130,7 +130,7 @@ export function LoopSystem() {
         return Rx.NEVER;
       }
       , [CONST_GAME.entityCommand](actions$, state$, command) {
-        const resolver = new CommandResolver(this);
+        const resolver = new CommandResolver(this, command);
         return CommandData[command.id].resolveCommand(resolver, command);
       }
     }

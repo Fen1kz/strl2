@@ -7,7 +7,7 @@ export class CommandDataModel extends Record({
   , targetType: null
   , getCommand: null
   , resultByTrait: Map()
-  , getEffect: null
+  , resolveCommand: null
 }) {
   static fromJS(js) {
     return new CommandDataModel(js)

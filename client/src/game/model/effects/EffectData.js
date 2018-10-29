@@ -9,7 +9,7 @@ import {Record} from "immutable";
 
 class EffectDataModel extends Record({
   id: null
-  , get: null
+  , getEffect: null
   , resolveEffect: x => x
 }) {static fromJS(js){return new EffectDataModel(js)}}
 
@@ -24,7 +24,7 @@ const MakeGetEffectFn = (id, defObj) => (obj) => Object.assign({}, {
 const EffectData = {
   [EffectId.TRAIT_VALUE_GET]: EffectDataModel.fromJS({
     id: EffectId.TRAIT_VALUE_GET
-    , get: MakeGetEffectFn(EffectId.TRAIT_VALUE_GET, {
+    , getEffect: MakeGetEffectFn(EffectId.TRAIT_VALUE_GET, {
       traitId: void 0
     })
     , resolveEffect: (resolver, effect) => {
@@ -35,22 +35,23 @@ const EffectData = {
   })
   , [EffectId.TRAIT_VALUE_SET]: EffectDataModel.fromJS({
     id: EffectId.TRAIT_VALUE_SET
-    , get: MakeGetEffectFn(EffectId.TRAIT_VALUE_SET, {
+    , getEffect: MakeGetEffectFn(EffectId.TRAIT_VALUE_SET, {
       traitId: void 0
       , value: void 0
     })
     , resolveEffect: (resolver, effect) => {
+      // effect = resolver.resolveEffect(effect);
       const targetId = resolver.get('targetId', effect);
-      const traitId = resolver.get('traitId', effect);
       const value = resolver.get('value', effect);
+      const traitId = resolver.get('traitId', effect);
       return resolver.game
         .updateEntity(targetId, entity => entity
-          .updateIn(['traits', traitId], value))
+          .setIn(['traits', traitId], value))
     }
   })
   , [EffectId.VALUE_NOT]: EffectDataModel.fromJS({
     id: EffectId.VALUE_NOT
-    , get: MakeGetEffectFn(EffectId.VALUE_NOT, {
+    , getEffect: MakeGetEffectFn(EffectId.VALUE_NOT, {
       value: void 0
     })
     , resolveEffect: (resolver, effect) => {
@@ -60,7 +61,7 @@ const EffectData = {
   })
   , [EffectId.MOVE]: EffectDataModel.fromJS({
     id: EffectId.MOVE
-    , get: MakeGetEffectFn(EffectId.MOVE, {
+    , getEffect: MakeGetEffectFn(EffectId.MOVE, {
       targetTileId: void 0
     })
     , resolveEffect: (resolver, effect) => {
