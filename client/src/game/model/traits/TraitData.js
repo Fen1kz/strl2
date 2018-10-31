@@ -112,7 +112,9 @@ createTraitData(TraitId.AutoDoor, {
       , effect: EffectData.TRAIT_VALUE_SET.getEffect({
         traitId: TraitId.Impassable
         , value: EffectData.VALUE_NOT.getEffect({
-          value: EffectData.TRAIT_VALUE_GET.getEffect()
+          value: EffectData.TRAIT_VALUE_GET.getEffect({
+            traitId: TraitId.Impassable
+          })
         })
       })
     });

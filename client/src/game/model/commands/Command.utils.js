@@ -105,56 +105,27 @@ export function applyCommandEffect(game, command) {
 export class CommandResolver {
   constructor(game, command) {
     this.game = game;
-    console.log('command', command);
-    this.scope = {
-      sourceId: command.sourceId
-      , targetId: command.targetId
-    };
+    this.command = command;
   }
 
-  resolveEffect(effect, scope) {
+  resolveEffect(effect) {
+    // console.log('resolving', effect, this);
     Object.keys(effect).map(key => {
       const value = effect[key];
-      if (key === 'id' || key === 'isEffect') {
-        return void 0
+      const commandValue = this.command[key];
+      if (key === 'id' || key === 'isEffect' || key === 'eval') {
+        return;
       } else if (value !== void 0) {
-        if (this.scope[key] === void 0) {
-          this.scope[key] = value;
-          if (value.isEffect) {
-            return value;
-          }
+        if (value.isEffect === true && !value.eval) {
+          effect[key] = this.resolveEffect(value);
         }
-      } else if (this.scope[key] === void 0) {
-        console.warning('Resolver cannot get', key, 'in', effect);
+      } else if (commandValue !== void 0) {
+        effect[key] = commandValue;
       } else {
-        const scoped = this.scope[key];
-        if (scoped.isEffect) {
-          effect.value = 
-        } else {
-          effect.value = scoped;
-        }
+        console.warn('Resolver cannot get', key, 'in', effect);
       }
-    }).filter(v => v)
-      .forEach(subeffect => {
-        this.resolveEffect(subeffect, scope)
-      })
-    // this.scope
-  }
-
-  get(propKey, effect) {
-    const propValue = effect[propKey];
-    if (propValue) {
-      if (propValue.isEffect === true) {
-        const value = EffectData[propValue.id].resolveEffect(this, propValue);
-        // this.scope[propKey] = value;
-        return value;
-      } else {
-        return propValue;
-      }
-    } else if (this.scope[propKey]) {
-      return this.scope[propKey];
-    } else {
-      console.warning('Resolved cannot get', propKey, 'in', effect);
-    }
+    });
+    // console.log('returning', effect);
+    return EffectData[effect.id].resolveEffect(effect, this);
   }
 }

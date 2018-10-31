@@ -11,6 +11,7 @@ class EffectDataModel extends Record({
   id: null
   , getEffect: null
   , resolveEffect: x => x
+  , applyEffect: x => x
 }) {static fromJS(js){return new EffectDataModel(js)}}
 
 const MakeGetEffectFn = (id, defObj) => (obj) => Object.assign({}, {
@@ -27,9 +28,8 @@ const EffectData = {
     , getEffect: MakeGetEffectFn(EffectId.TRAIT_VALUE_GET, {
       traitId: void 0
     })
-    , resolveEffect: (resolver, effect) => {
-      const targetId = resolver.get('targetId', effect);
-      const traitId = resolver.get('traitId', effect);
+    , resolveEffect: (effect, resolver) => {
+      const {targetId, traitId} = effect;
       return resolver.game.getEntityTrait(targetId, traitId);
     }
   })
@@ -39,12 +39,9 @@ const EffectData = {
       traitId: void 0
       , value: void 0
     })
-    , resolveEffect: (resolver, effect) => {
-      // effect = resolver.resolveEffect(effect);
-      const targetId = resolver.get('targetId', effect);
-      const value = resolver.get('value', effect);
-      const traitId = resolver.get('traitId', effect);
-      return resolver.game
+    , applyEffect: (game, effect) => {
+      const {targetId, value, traitId} = effect;
+      return game
         .updateEntity(targetId, entity => entity
           .setIn(['traits', traitId], value))
     }
@@ -54,9 +51,8 @@ const EffectData = {
     , getEffect: MakeGetEffectFn(EffectId.VALUE_NOT, {
       value: void 0
     })
-    , resolveEffect: (resolver, effect) => {
-      const value = resolver.get('value', effect);
-      return !value;
+    , resolveEffect: (effect, resolver) => {
+      return !effect.value;
     }
   })
   , [EffectId.MOVE]: EffectDataModel.fromJS({
@@ -64,15 +60,35 @@ const EffectData = {
     , getEffect: MakeGetEffectFn(EffectId.MOVE, {
       targetTileId: void 0
     })
-    , resolveEffect: (resolver, effect) => {
-      const targetId = resolver.get('targetId', effect);
-      const sourceTileId = resolver.game.getEntityTileId(targetId);
-      const targetTileId = resolver.get('targetTileId', effect);
-
-      return resolver.game
+    , applyEffect(game, effect) {
+      const {targetId, targetTileId} = effect;
+      const sourceTileId = game.getEntityTileId(targetId);
+      return game
         .onEvent('onEntityLeaveTile', targetId, sourceTileId)
         .onEvent('onEntityEnterTile', targetId, targetTileId)
         .update(game => targetId === game.playerId ? game.onEvent('onPlayerMove') : game);
+    }
+  })
+  , [EffectId.TILE_FIND]: EffectDataModel.fromJS({
+    id: EffectId.TILE_FIND
+    , getEffect: MakeGetEffectFn(EffectId.TILE_FIND, {
+      targetTileId: void 0
+      , effect: void 0
+      , effectId: void 0
+    })
+    , resolveEffect: (effect, resolver) => {
+      const {targetTileId, effectId, effectData} = effect;
+      let result = null;
+      const entityId = resolver.game.getTile(targetTileId).elist.some(entityId => {
+        result = resolver.resolveEffect(
+          EffectData[effect.effectId].getEffect({
+            targetId: entityId
+            , ...effectData
+          })
+        );
+        if (result) return true;
+      });
+      return result;
     }
   })
 };

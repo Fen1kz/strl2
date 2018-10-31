@@ -29,9 +29,8 @@ export function PositionSystem() {
           .remove('elist', elist => elist.filter(eid => eid !== entityId)))
       }
       , onEntityEnterTile(entityId, tileId) {
-        return this.updateTile(tileId, tile => tile
+        return this.updateTile(tileId, tile => tile.update('elist', elist => elist.push(entityId)))
           .updateEntity(entityId, entity => entity.setIn(['traits', TraitId.Position], tileId))
-          .update('elist', elist => elist.push(entityId)))
       }
     }
   }

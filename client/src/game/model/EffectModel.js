@@ -8,7 +8,3 @@ export class EffectModel extends Record({
     return new EffectModel(js);
   }
 }
-
-export const EffectId = {
-
-};

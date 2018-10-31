@@ -8,11 +8,11 @@ import {updateViaReduce} from "../Model.utils";
 import {applyCommandEffect, getCommandResult} from "./Command.utils";
 import {EffectApplier} from "../effects";
 import EffectData from "../effects/EffectData";
-import {EffectId} from "../EffectModel";
 
 import * as Rx from "rxjs/index";
 import * as op from "rxjs/operators";
 import {action$entityApplyEffect, action$entityCommandApplyEffect} from "../../rdx.game.actions";
+import EffectId from "../effects/EffectId";
 
 export const CommandTargetType = {
   SELF: 'SELF'
@@ -33,7 +33,7 @@ const CommandData = {
   [CommandId.MOVE]: CommandDataModel.fromJS({
     id: CommandId.MOVE
     , targetType: CommandTargetType.TILE
-    , getCommand: MakeGetCommandFn(CommandId.ENTITY_EFFECT, {
+    , getCommand: MakeGetCommandFn(CommandId.MOVE, {
       targetTileId: void 0
     })
     , resultByTrait: {
@@ -70,9 +70,53 @@ const CommandData = {
         )
       }
     }
-    , getEffect: (game, {sourceId, targetTileId}) => {
-      const Impassable = EffectData.TRAIT_VALUE_GET.getEffect();
-      const MoveEffect = EffectData.MOVE.getEffect(targetTileId)
+    , resolveCommand: (resolver, command) => {
+      const game = resolver.game;
+      console.log('resolving move', command);
+      const {targetId, targetTileId} = command;
+      const target = game.getEntity(targetId);
+      const targetTile = game.getTile(targetTileId);
+
+      const moveEffect = resolver.resolveEffect(EffectData.MOVE.getEffect());
+      let nextEffect = moveEffect;
+      const blockers = targetTile.elist.toArray()
+        .filter(entityId => game.getEntityTrait(entityId, TraitId.Impassable));
+      if (blockers.length === 0) {
+        return Rx.of(action$entityApplyEffect(moveEffect));
+      } else if (blockers.length === 1 && target.hasTrait(TraitId.StatStrength)) {
+        const entitiesToPush = blockers
+          .filter(entityId => game.getEntity(entityId).hasTrait(TraitId.PhysItem));
+        if (blockers.length === entitiesToPush.length) {
+          const entityId = entitiesToPush[0];
+          const sourceTileId = game.getEntityTileId(targetId);
+          const offsetX = getTileX(targetTileId) - getTileX(sourceTileId);
+          const offsetY = getTileY(targetTileId) - getTileY(sourceTileId);
+          const pushTileId = getTileIdOffset(targetTileId, offsetX, offsetY);
+          const pushEffect = EffectData.MOVE.getEffect({
+            targetId: entityId
+            , targetTileId: pushTileId
+            , then: moveEffect
+          });
+          return Rx.of(action$entityApplyEffect(
+            resolver.resolveEffect(pushEffect)
+          ));
+        }
+      }
+
+      // const targetInteractAbility = hasImpassable && target.hasTrait(TraitId.AbilityInteract);
+      // const hasInteractive = targetInteractAbility && resolver.resolveEffect(
+      //   EffectData.TILE_FIND.getEffect({
+      //     effectId: EffectId.TRAIT_VALUE_GET
+      //     , effectData: {traitId: TraitId.Interactive}
+      //   })
+      // );
+
+
+      // console.log('MoveEffect', MoveEffect);
+      // console.log('Impassable', Impassable);
+      return Rx.NEVER;
+      // const Impassable = EffectData.TRAIT_VALUE_GET.getEffect();
+      // const MoveEffect = EffectData.MOVE.getEffect(targetTileId)
     }
   })
   // , [CommandId.INTERACT]: CommandDataModel.fromJS({
@@ -117,7 +161,8 @@ const CommandData = {
       effect: void 0
     })
     , resolveCommand: (resolver, command) => {
-      const resolvedEffect = EffectData[command.effect.id].resolveEffect(resolver, command.effect);
+      const resolvedEffect = resolver.resolveEffect(command.effect, command);
+      // console.log('resolvedEffect', resolvedEffect);
       return Rx.of(action$entityApplyEffect(resolvedEffect));
     }
   })

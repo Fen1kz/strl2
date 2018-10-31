@@ -33,7 +33,11 @@ export const PlayerInputMode = {
       const targetTileId = getTileIdOffset(playerTileId, offset.x, offset.y);
       return Rx.of(
         action$entityCommand(
-          CommandData[CommandId.MOVE].getCommand(player.id, targetTileId)
+          CommandData[CommandId.MOVE].getCommand({
+            sourceId: player.id
+            , targetId: player.id
+            , targetTileId
+          })
         )
       );
     }

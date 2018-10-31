@@ -11,15 +11,15 @@ import {updateViaReduce} from "../Model.utils";
 import {selectGame} from "../../rdx.game.selectors";
 import {
   action$gameLoopContinue
-  ,  action$gameLoopApply
-  ,  action$gameLoopEnergy
-  ,  action$entityCommandRequestActions
-  ,  action$entityCommandGetResult
-  ,  action$entityCommandApplyEffects,
+  , action$gameLoopApply
+  , action$gameLoopEnergy
+  , action$entityCommandRequestActions
+  , action$entityCommandGetResult
+  , action$entityCommandApplyEffects,
   action$entityCommand,
   action$playerModeChange,
   action$entityCommandApplyEffect,
-  action$playerQueueShift, action$playerQueueClear
+  action$playerQueueShift, action$playerQueueClear, action$entityApplyEffect
 } from "../../rdx.game.actions";
 import CommandData, {CommandTargetType} from "../commands/CommandData";
 import {CommandResultType} from "../commands/CommandResult";
@@ -27,6 +27,7 @@ import CommandResult from "../commands/CommandResult";
 import {applyCommandEffect, CommandResolver, getCommandResult, resolveEntityCommand} from "../commands/Command.utils";
 import {ofType} from "redux-observable";
 import CommandId from "../commands/CommandId";
+import EffectData from "../effects/EffectData";
 
 const consoleObs = (name) => ({
   next: v => console.log(name, v)
@@ -85,9 +86,10 @@ export function LoopSystem() {
         console.log('playerQueueClear', waitingForInput, this.queue.size);
         return this.set('queue', List());
       }
-      , [CONST_GAME.entityCommandApplyEffect]({command}) {
+      , [CONST_GAME.entityApplyEffect]({effect}) {
         console.log('action$entityCommandApplyEffect');
-        return applyCommandEffect(this, command)
+        return EffectData[effect.id].applyEffect(this, effect);
+        // return applyCommandEffect(this, command)
       }
     }
     , rxEvents: {
