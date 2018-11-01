@@ -79,6 +79,7 @@ const CommandData = {
 
       const moveEffect = resolver.resolveEffect(EffectData.MOVE.getEffect());
       let nextEffect = moveEffect;
+
       const blockers = targetTile.elist.toArray()
         .filter(entityId => game.getEntityTrait(entityId, TraitId.Impassable));
       if (blockers.length === 0) {
@@ -101,9 +102,12 @@ const CommandData = {
             resolver.resolveEffect(pushEffect)
           ));
         }
+      } else if (target.hasTrait(TraitId.AbilityInteract)
+        && blockers.some(entityId => game.getEntityTrait(entityId, TraitId.Interactive))) {
+          return Rx.of();
       }
 
-      // const targetInteractAbility = hasImpassable && target.hasTrait(TraitId.AbilityInteract);
+      target.hasTrait(TraitId.AbilityInteract);
       // const hasInteractive = targetInteractAbility && resolver.resolveEffect(
       //   EffectData.TILE_FIND.getEffect({
       //     effectId: EffectId.TRAIT_VALUE_GET
@@ -114,7 +118,7 @@ const CommandData = {
 
       // console.log('MoveEffect', MoveEffect);
       // console.log('Impassable', Impassable);
-      return Rx.NEVER;
+      return Rx.EMPTY;
       // const Impassable = EffectData.TRAIT_VALUE_GET.getEffect();
       // const MoveEffect = EffectData.MOVE.getEffect(targetTileId)
     }

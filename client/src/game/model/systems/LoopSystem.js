@@ -36,7 +36,7 @@ const consoleObs = (name) => ({
 });
 
 export function LoopSystem() {
-  const TIME_TURN = 500;
+  const TIME_TURN = 100;
   const TIME_DEBOUNCE = 1000;
   const queue$ = new Rx.Subject();
   let waitingForInput = false;
@@ -88,7 +88,16 @@ export function LoopSystem() {
       }
       , [CONST_GAME.entityApplyEffect]({effect}) {
         console.log('action$entityCommandApplyEffect');
-        return EffectData[effect.id].applyEffect(this, effect);
+        const effectResult = EffectData[effect.id].applyEffect(this, effect);
+        if (effectResult !== void 0) {
+          if (effect.then !== void 0) {
+            return effectResult.onEvent(CONST_GAME.entityApplyEffect, {effect: effect.then});
+          } else {
+            return effectResult;
+          }
+        } else {
+          return this;
+        }
         // return applyCommandEffect(this, command)
       }
     }
@@ -115,8 +124,6 @@ export function LoopSystem() {
             Rx.from(commandsPerEntityPerActors).pipe(
               op.concatAll() // [cmd$, cmd$] - [cmd$, cmd$] => cmd$ - cmd$ - cmd$
               , op.concatAll() // cmd$ - cmd$ - cmd$ => cmd - cmd - cmd
-              // , op.concatMap(command => entityCommandGetResult(this, command))
-              // , op.tap(console.log)
             )
             , Rx.of(action$gameLoopContinue()).pipe(op.delay(TIME_TURN))
           )
@@ -181,24 +188,6 @@ export function LoopSystem() {
       default:
         console.error(inputCommand);
         throw new Error(`invalid inputCommand`);
-    }
-  }
-
-  function entityCommandGetResult(game, command) {
-    const entityId = command.sourceId;
-    const isPlayer = game.playerId === entityId;
-    const commandResult = getCommandResult(game, command);
-    switch (commandResult.status) {
-      case CommandResultType.SUCCESS:
-        return Rx.of(action$entityCommandApplyEffect(command));
-      case CommandResultType.REPLACE:
-      case CommandResultType.REPLACE_FORCED:
-        return entityCommandGetResult(game, commandResult.command);
-      case CommandResultType.FAILURE:
-        return !isPlayer ? Rx.EMPTY : Rx.of(action$playerQueueClear());
-      default:
-        console.error(`Invalid commandResult`, commandResult);
-        throw new Error(`Invalid commandResult ${commandResult}`);
     }
   }
 }

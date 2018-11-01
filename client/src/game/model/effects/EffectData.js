@@ -60,9 +60,18 @@ const EffectData = {
     , getEffect: MakeGetEffectFn(EffectId.MOVE, {
       targetTileId: void 0
     })
+    , resolveEffect: (effect, resolver) => {
+      return effect;
+    }
     , applyEffect(game, effect) {
       const {targetId, targetTileId} = effect;
       const sourceTileId = game.getEntityTileId(targetId);
+      const targetTile = game.getTile(targetTileId);
+
+      const blocked = targetTile.elist.some(entityId => game.getEntityTrait(entityId, TraitId.Impassable));
+
+      if (blocked) return;
+
       return game
         .onEvent('onEntityLeaveTile', targetId, sourceTileId)
         .onEvent('onEntityEnterTile', targetId, targetTileId)
