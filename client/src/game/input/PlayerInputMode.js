@@ -46,18 +46,15 @@ export const PlayerInputMode = {
     id: PlayerInputModeType.TARGET_NEAR
     , onCursorMove(game, offset) {
       const targetTileId = getTileIdOffset(game.playerMode.cursor, offset.x, offset.y);
-      const actions = [];
-      const entityIdInteractive = game.findEntityIdOnTile(targetTileId
-        , (eid) => game.getEntityTrait(eid, TraitId.Interactive));
-      if (entityIdInteractive) {
-        actions.push(action$entityCommand(
-          CommandData[game.playerMode.commandFn].getCommand(
-            game.playerId
-            , entityIdInteractive
-          )
-        ));
-      }
-      actions.push(action$playerModeChange(PlayerInputModeType.DEFAULT, null));
+      const actions = [
+        action$entityCommand(
+          CommandData[game.playerMode.commandFn].getCommand({
+            sourceId: game.playerId
+            , targetTileId
+          })
+        )
+        , action$playerModeChange(PlayerInputModeType.DEFAULT, null)
+      ];
       return Rx.from(actions);
     }
   })

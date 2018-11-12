@@ -71,7 +71,14 @@ createTraitData(TraitId.Door, {
 createTraitData(TraitId.DoorInteractive, {
   onAttach: (entity, traitData) => entity
     .addTrait(TraitId.Door, traitData)
-    .addTrait(TraitId.Interactive, CommandEffect({commandId: CommandId.SWITCH}))
+    .addTrait(TraitId.Interactive, EffectData.TRAIT_VALUE_SET.getEffect({
+      traitId: TraitId.Impassable
+      , value: EffectData.VALUE_NOT.getEffect({
+        value: EffectData.TRAIT_VALUE_GET.getEffect({
+          traitId: TraitId.Impassable
+        })
+      })
+    }))
 });
 
 createTraitData(TraitId.AutoDoor, {

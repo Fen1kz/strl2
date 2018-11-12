@@ -20,4 +20,5 @@ export default {
   , entityCommandScheduleEffect: 'entityCommandScheduleEffect'
   , entityCommandApplyEffects: 'entityCommandApplyEffects'
   , entityApplyEffect: 'entityApplyEffect'
+  , entityCommandUse: 'entityCommandUse'
 };

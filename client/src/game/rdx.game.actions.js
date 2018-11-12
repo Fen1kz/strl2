@@ -58,6 +58,12 @@ export const action$entityApplyEffect = (effect) => ({
   , data: {effect}
 });
 
+export const action$entityCommandUse = (command) => ({
+  type: CONST_GAME.entityCommandUse
+  , data: {command}
+});
+
+
 export const action$entityCommandApplyEffect = (command) => ({
   type: CONST_GAME.entityCommandApplyEffect
   , data: {command}

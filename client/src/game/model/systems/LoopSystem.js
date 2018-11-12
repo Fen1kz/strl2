@@ -19,7 +19,7 @@ import {
   action$entityCommand,
   action$playerModeChange,
   action$entityCommandApplyEffect,
-  action$playerQueueShift, action$playerQueueClear, action$entityApplyEffect
+  action$playerQueueShift, action$playerQueueClear, action$entityApplyEffect, action$entityCommandUse
 } from "../../rdx.game.actions";
 import CommandData, {CommandTargetType} from "../commands/CommandData";
 import {CommandResultType} from "../commands/CommandResult";
@@ -99,6 +99,9 @@ export function LoopSystem() {
           return this;
         }
         // return applyCommandEffect(this, command)
+      }
+      , [CONST_GAME.entityCommandUse]({command}) {
+        return this.updateEntityEnergy(command.sourceId, energy => energy - command.cost)
       }
     }
     , rxEvents: {
